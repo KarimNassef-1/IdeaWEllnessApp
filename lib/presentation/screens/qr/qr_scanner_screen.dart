@@ -1,20 +1,24 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import '../../../data/repositories/attendance_repository.dart';
+import '../../state/auth_notifier.dart';
 import 'qr_session_confirmation_screen.dart';
 
-class QrScannerScreen extends StatefulWidget {
+class QrScannerScreen extends ConsumerStatefulWidget {
   const QrScannerScreen({super.key});
 
   @override
-  State<QrScannerScreen> createState() => _QrScannerScreenState();
+  ConsumerState<QrScannerScreen> createState() => _QrScannerScreenState();
 }
 
-class _QrScannerScreenState extends State<QrScannerScreen> {
+class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
   static const Color _accentOrange = Color(0xFFF7931A);
+  final AttendanceRepository _attendanceRepository = AttendanceRepository();
   final MobileScannerController _controller = MobileScannerController(
     autoStart: true,
     facing: CameraFacing.back,
@@ -25,6 +29,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
   bool _handled = false;
   bool _torchOn = false;
   bool _showSuccess = false;
+  bool _submitting = false;
 
   @override
   void dispose() {
@@ -47,22 +52,117 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     await _controller.stop();
     HapticFeedback.vibrate();
     if (!mounted) return;
-    setState(() => _showSuccess = true);
-    await Future<void>.delayed(const Duration(milliseconds: 700));
-    if (!mounted) return;
 
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => QrSessionConfirmationScreen(scannedCode: code),
-      ),
-    );
+    setState(() => _submitting = true);
+
+    try {
+      final result = await _checkIn(code);
+      if (!mounted) return;
+
+      if (result != null) {
+        setState(() {
+          _submitting = false;
+          _showSuccess = true;
+        });
+        await Future<void>.delayed(const Duration(milliseconds: 700));
+        if (!mounted) return;
+
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => QrSessionConfirmationScreen(result: result),
+          ),
+        );
+      }
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
+      );
+    }
 
     if (!mounted) return;
     setState(() {
       _showSuccess = false;
       _handled = false;
+      _submitting = false;
     });
     await _controller.start();
+  }
+
+  Future<AttendanceCheckInResult?> _checkIn(String code) async {
+    final token = ref.read(authNotifierProvider).user?.token;
+    if (token == null || token.isEmpty) {
+      throw Exception('Please log in again.');
+    }
+
+    var result = await _attendanceRepository.checkIn(
+      token: token,
+      qrCodeValue: code,
+    );
+
+    if (!result.requiresChoice) {
+      return result;
+    }
+
+    if (!mounted) return null;
+    final option = await _showAttendanceChoice(result);
+    if (option == null) return null;
+
+    result = await _attendanceRepository.checkIn(
+      token: token,
+      qrCodeValue: code,
+      option: option,
+    );
+
+    return result;
+  }
+
+  Future<AttendancePackageOption?> _showAttendanceChoice(
+    AttendanceCheckInResult result,
+  ) {
+    return showModalBottomSheet<AttendancePackageOption>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 6, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Choose attendance type',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 8),
+                Text(result.message),
+                const SizedBox(height: 12),
+                ...result.options.map((option) {
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      option.attendanceMode == 'openGym'
+                          ? Icons.fitness_center_rounded
+                          : Icons.event_available_rounded,
+                    ),
+                    title: Text(option.label),
+                    subtitle: Text(
+                      option.remainingSessions == null
+                          ? option.packageName
+                          : '${option.packageName} - ${option.remainingSessions} remaining',
+                    ),
+                    onTap: () => Navigator.of(context).pop(option),
+                  );
+                }),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -74,10 +174,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          MobileScanner(
-            controller: _controller,
-            onDetect: _onDetect,
-          ),
+          MobileScanner(controller: _controller, onDetect: _onDetect),
           _ScannerOverlay(lensSize: lensSize, accentColor: _accentOrange),
           SafeArea(
             child: Padding(
@@ -91,7 +188,11 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(14),
-                          child: Image.asset('img/idea-app-icon.png', width: 48, height: 48),
+                          child: Image.asset(
+                            'img/idea-app-icon.png',
+                            width: 48,
+                            height: 48,
+                          ),
                         ),
                         const SizedBox(height: 10),
                         const Text(
@@ -136,7 +237,9 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                   Row(
                     children: [
                       _GlassCircleButton(
-                        icon: _torchOn ? Icons.flashlight_off_rounded : Icons.flashlight_on_rounded,
+                        icon: _torchOn
+                            ? Icons.flashlight_off_rounded
+                            : Icons.flashlight_on_rounded,
                         onTap: _toggleTorch,
                       ),
                       const Spacer(),
@@ -162,12 +265,22 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       color: const Color(0xFFF7931A).withValues(alpha: 0.92),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.check_rounded, color: Colors.white, size: 62),
+                    child: const Icon(
+                      Icons.check_rounded,
+                      color: Colors.white,
+                      size: 62,
+                    ),
                   ),
                 ),
               ),
             ),
           ),
+          if (_submitting)
+            const IgnorePointer(
+              child: Center(
+                child: CircularProgressIndicator(color: _accentOrange),
+              ),
+            ),
         ],
       ),
     );
@@ -206,14 +319,17 @@ class _ScannerOverlayState extends State<_ScannerOverlay>
         builder: (context, constraints) {
           final lensLeft = (constraints.maxWidth - widget.lensSize) / 2;
           final lensTop = (constraints.maxHeight - widget.lensSize) / 2;
-          final lensRect = Rect.fromLTWH(lensLeft, lensTop, widget.lensSize, widget.lensSize);
+          final lensRect = Rect.fromLTWH(
+            lensLeft,
+            lensTop,
+            widget.lensSize,
+            widget.lensSize,
+          );
 
           return Stack(
             fit: StackFit.expand,
             children: [
-              CustomPaint(
-                painter: _LensMaskPainter(lensRect: lensRect),
-              ),
+              CustomPaint(painter: _LensMaskPainter(lensRect: lensRect)),
               Positioned.fromRect(
                 rect: lensRect,
                 child: _ViewfinderCorners(accentColor: widget.accentColor),
@@ -235,7 +351,9 @@ class _ScannerOverlayState extends State<_ScannerOverlay>
                             color: widget.accentColor,
                             boxShadow: [
                               BoxShadow(
-                                color: widget.accentColor.withValues(alpha: 0.8),
+                                color: widget.accentColor.withValues(
+                                  alpha: 0.8,
+                                ),
                                 blurRadius: 10,
                               ),
                             ],

@@ -12,26 +12,39 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _usernameController = TextEditingController();
-  final _gymIdController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _usernameController.dispose();
-    _gymIdController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _login() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter email and password.')),
+      );
+      return;
+    }
+
     final success = await ref.read(authNotifierProvider.notifier).login(
-          username: _usernameController.text,
-          gymId: _gymIdController.text,
+          email: email,
+          password: password,
         );
 
     if (!mounted || success) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Please enter username and gym ID.')),
+      const SnackBar(content: Text('Invalid email or password.')),
     );
+    print('EMAIL RAW = ${_emailController.text}');
+print('PASSWORD RAW = ${_passwordController.text}');
   }
 
   @override
@@ -123,12 +136,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                         ),
                         const SizedBox(height: 24),
+                        // Email field
                         TextField(
-                          controller: _usernameController,
+                          controller: _emailController,
                           textInputAction: TextInputAction.next,
+                          keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
-                            labelText: 'Username',
-                            prefixIcon: const Icon(Icons.person_rounded),
+                            labelText: 'Email',
+                            prefixIcon: const Icon(Icons.email_rounded),
                             floatingLabelStyle: TextStyle(color: scheme.primary),
                             filled: true,
                             fillColor: const Color(0xFFF8F8F8),
@@ -142,12 +157,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 14),
+                        // Password field
                         TextField(
-                          controller: _gymIdController,
+                          controller: _passwordController,
+                          obscureText: _obscurePassword,
                           onSubmitted: (_) => _login(),
                           decoration: InputDecoration(
-                            labelText: 'Gym ID',
-                            prefixIcon: const Icon(Icons.badge_rounded),
+                            labelText: 'Password',
+                            prefixIcon: const Icon(Icons.lock_rounded),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_rounded
+                                    : Icons.visibility_off_rounded,
+                              ),
+                              onPressed: () {
+                                setState(() => _obscurePassword = !_obscurePassword);
+                              },
+                            ),
                             floatingLabelStyle: TextStyle(color: scheme.primary),
                             filled: true,
                             fillColor: const Color(0xFFF8F8F8),

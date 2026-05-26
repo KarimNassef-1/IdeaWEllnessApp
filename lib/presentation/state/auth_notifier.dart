@@ -51,13 +51,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(loading: false, user: user, clearUser: user == null);
   }
 
-  Future<bool> login({required String username, required String gymId}) async {
-    if (username.trim().isEmpty || gymId.trim().isEmpty) return false;
-    state = state.copyWith(loading: true);
-    final user = await _repo.signIn(username: username, gymId: gymId);
+Future<bool> login({required String email, required String password}) async {
+  if (email.trim().isEmpty || password.trim().isEmpty) return false;
+  state = state.copyWith(loading: true);
+  try {
+    final user = await _repo.signIn(email: email, password: password);
     state = state.copyWith(loading: false, user: user);
     return true;
+  } catch (e) {
+    state = state.copyWith(loading: false);
+    return false;
   }
+}
 
   Future<void> logout() async {
     await _repo.signOut();

@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 
-class QrSessionConfirmationScreen extends StatelessWidget {
-  const QrSessionConfirmationScreen({
-    super.key,
-    required this.scannedCode,
-  });
+import '../../../data/repositories/attendance_repository.dart';
 
-  final String scannedCode;
+class QrSessionConfirmationScreen extends StatelessWidget {
+  const QrSessionConfirmationScreen({super.key, required this.result});
+
+  final AttendanceCheckInResult result;
 
   @override
   Widget build(BuildContext context) {
@@ -38,12 +37,17 @@ class QrSessionConfirmationScreen extends StatelessWidget {
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 10),
-                const Text('Welcome to your session at Heliopolis Branch.'),
+                Text(result.message),
                 const SizedBox(height: 14),
-                Text(
-                  'QR: $scannedCode',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
+                if (result.branchName != null)
+                  Text(
+                    result.branchName!,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                if (result.remainingSessions != null) ...[
+                  const SizedBox(height: 8),
+                  Text('Remaining sessions: ${result.remainingSessions}'),
+                ],
                 const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
