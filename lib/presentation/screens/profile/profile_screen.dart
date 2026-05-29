@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/navigation/app_routes.dart';
-import '../../../domain/entities/user_profile.dart';
 import '../../state/auth_notifier.dart';
 import '../../widgets/animated_card.dart';
 
@@ -162,7 +161,7 @@ class ProfileScreen extends ConsumerWidget {
           if (user?.canFreeze == true) ...[
             const SizedBox(height: 14),
             AnimatedCard(
-              onTap: () => _showFreezeDialog(context, ref, user.freezeRemainingDays ?? 0),
+              onTap: () => _showFreezeDialog(context, ref, user.freezeRemainingDays!),
               child: Row(
                 children: [
                   Container(
@@ -241,7 +240,7 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  bool _hasAnyPerk(UserProfile? user) =>
+  bool _hasAnyPerk(user) =>
       user != null &&
       (user.freezeRemainingDays != null ||
           user.invitationsRemaining != null ||
