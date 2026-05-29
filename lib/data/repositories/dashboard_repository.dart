@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '../../core/config/api_config.dart';
 import '../../domain/entities/branch_summary.dart';
+import '../../domain/entities/class_schedule_item.dart';
 import '../../domain/entities/subscribed_class.dart';
 
 class DashboardRepository {
@@ -37,6 +38,21 @@ class DashboardRepository {
         .whereType<Map<String, dynamic>>()
         .map(SubscribedClass.fromJson)
         .toList();
+  }
+
+  Future<TodayClasses> todayClasses(String token, {String? branchId}) async {
+    final uri = Uri.parse('${ApiConfig.baseUrl}/api/dashboard/today-classes')
+        .replace(queryParameters: branchId != null ? {'branchId': branchId} : null);
+
+    final response = await http.get(uri, headers: _headers(token));
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to load today\'s classes.');
+    }
+
+    return TodayClasses.fromJson(
+      jsonDecode(response.body) as Map<String, dynamic>,
+    );
   }
 
   Map<String, String> _headers(String token) {

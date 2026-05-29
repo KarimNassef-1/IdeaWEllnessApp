@@ -69,3 +69,8 @@ android {
 flutter {
     source = "../.."
 }
+
+// Exclude checker-qual to avoid Gradle transform cache issues on Windows
+configurations.all {
+    exclude(group = "org.checkerframework", module = "checker-qual")
+}

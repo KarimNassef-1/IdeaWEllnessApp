@@ -6,7 +6,7 @@ import '../../../core/navigation/app_routes.dart';
 import '../../../core/utils/showcase_ai_images.dart';
 import '../../../core/utils/time_greeting.dart';
 import '../../../domain/entities/branch_summary.dart';
-import '../../../domain/entities/gym_session.dart';
+import '../../../domain/entities/class_schedule_item.dart';
 import '../../../domain/entities/subscribed_class.dart';
 import '../../state/app_providers.dart';
 import '../../widgets/animated_card.dart';
@@ -24,11 +24,10 @@ class HomeScreen extends ConsumerWidget {
     final fresh = content.freshDrops();
     final highlights = content.partnerHighlights();
     final offers = content.specialOffers();
-    final sessions = content.upcomingSessions();
-    final allClasses = content.allClassesSchedule();
-    final todayClasses = _classesForToday(allClasses);
     final branches = ref.watch(branchesProvider);
     final subscribedClasses = ref.watch(subscribedClassesProvider);
+    final selectedClassBranchId = ref.watch(selectedClassBranchIdProvider);
+    final todayClassesAsync = ref.watch(todayClassesProvider);
     final partners = content.partners();
 
     return Scaffold(
@@ -89,7 +88,11 @@ class HomeScreen extends ConsumerWidget {
                 CircularShortcutButton(
                   label: 'Schedule',
                   icon: Icons.calendar_today_rounded,
-                  onTap: () => _openAllClasses(context, allClasses),
+                  onTap: () => _openClassItems(
+                    context,
+                    'Full Schedule',
+                    todayClassesAsync.valueOrNull?.branchClasses ?? [],
+                  ),
                 ),
                 CircularShortcutButton(
                   label: 'Arenas',
@@ -150,20 +153,29 @@ class HomeScreen extends ConsumerWidget {
             ),
             _subscribedClassesStrip(context, subscribedClasses),
             const SizedBox(height: 18),
+            _branchClassSelector(context, ref, branches, selectedClassBranchId),
+            const SizedBox(height: 18),
             SectionHeader(
-              title: "Today's Classes",
+              title: "My Classes Today",
               actionLabel: 'View All',
-              onAction: () => _openAllClasses(context, todayClasses),
+              onAction: () => _openClassItems(
+                context,
+                'My Classes Today',
+                todayClassesAsync.valueOrNull?.myClasses ?? [],
+              ),
             ),
-            CarouselWidget(
-              autoScroll: false,
-              height: 196,
-              items: todayClasses.isEmpty
-                  ? [_emptyStateCard(context, 'No classes scheduled today.')]
-                  : todayClasses
-                        .map((session) => _sessionCard(context, session))
-                        .toList(),
+            _todayClassesStrip(context, todayClassesAsync, useMyClasses: true),
+            const SizedBox(height: 18),
+            SectionHeader(
+              title: "Today's Classes${_selectedBranchLabel(branches.valueOrNull, selectedClassBranchId)}",
+              actionLabel: 'View All',
+              onAction: () => _openClassItems(
+                context,
+                "Today's Classes",
+                todayClassesAsync.valueOrNull?.branchClasses ?? [],
+              ),
             ),
+            _todayClassesStrip(context, todayClassesAsync, useMyClasses: false),
             const SizedBox(height: 18),
             SectionHeader(
               title: 'Special Offers',
@@ -210,17 +222,6 @@ class HomeScreen extends ConsumerWidget {
                   );
                 },
               ),
-            ),
-            const SizedBox(height: 18),
-            SectionHeader(
-              title: 'Upcoming Sessions',
-              actionLabel: 'View All',
-              onAction: () => _openAllClasses(context, allClasses),
-            ),
-            CarouselWidget(
-              autoScroll: false,
-              height: 196,
-              items: sessions.map((s) => _sessionCard(context, s)).toList(),
             ),
             const SizedBox(height: 18),
             _title(context, 'Our Partners'),
@@ -328,7 +329,7 @@ class HomeScreen extends ConsumerWidget {
         }
 
         return SizedBox(
-          height: 112,
+          height: 136,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: items.length,
@@ -377,6 +378,34 @@ class HomeScreen extends ConsumerWidget {
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
+                            if (branch.occupancyRatio != null) ...[
+                              const SizedBox(height: 8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(999),
+                                child: LinearProgressIndicator(
+                                  value: branch.occupancyRatio,
+                                  minHeight: 5,
+                                  backgroundColor: Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withValues(alpha: 0.15),
+                                  valueColor: AlwaysStoppedAnimation(
+                                    _occupancyColor(branch.occupancyRatio!),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${branch.currentlyPresent} / ${branch.capacity} inside',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall
+                                    ?.copyWith(
+                                      color: _occupancyColor(branch.occupancyRatio!),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -476,27 +505,104 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _emptyStateCard(BuildContext context, String message) {
-    return AnimatedCard(
-      showShadow: false,
-      child: Center(
-        child: Text(
-          message,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
+  Widget _branchClassSelector(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<List<BranchSummary>> branches,
+    String? selectedBranchId,
+  ) {
+    final items = branches.valueOrNull ?? [];
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    return SizedBox(
+      height: 36,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: items.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final branch = items[index];
+          final isSelected = selectedBranchId == null
+              ? index == 0
+              : branch.branchId == selectedBranchId;
+
+          return GestureDetector(
+            onTap: () {
+              // Selecting the first branch (index 0) resets to home branch (null = default)
+              final newId = index == 0 ? null : branch.branchId;
+              ref.read(selectedClassBranchIdProvider.notifier).state = newId;
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                branch.branchName,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.onPrimary
+                      : Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _sessionCard(BuildContext context, GymSession s) {
-    final showcaseImage = showcaseAiImage(
-      'high action gym class ${s.name} coached by ${s.trainer} premium cinematic',
-      seed: s.id.hashCode.abs() % 100000,
+  Widget _todayClassesStrip(
+    BuildContext context,
+    AsyncValue<TodayClasses> todayAsync, {
+    required bool useMyClasses,
+  }) {
+    return todayAsync.when(
+      loading: () => const SizedBox(
+        height: 196,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, _) => const SizedBox(
+        height: 196,
+        child: Center(child: Text('Classes are unavailable right now.')),
+      ),
+      data: (today) {
+        final items = useMyClasses ? today.myClasses : today.branchClasses;
+        if (items.isEmpty) {
+          return SizedBox(
+            height: 196,
+            child: _emptyStateCard(
+              context,
+              useMyClasses
+                  ? 'No subscribed classes scheduled for today.'
+                  : 'No classes at your branch today.',
+            ),
+          );
+        }
+
+        return CarouselWidget(
+          autoScroll: false,
+          height: 196,
+          items: items.map((item) => _classCard(context, item)).toList(),
+        );
+      },
     );
-    final levelLabel = s.name.contains('Ladies Only')
-        ? 'Ladies Only'
-        : 'All Levels';
+  }
+
+  Widget _classCard(BuildContext context, ClassScheduleItem item) {
+    final showcaseImage = item.photoUrl?.isNotEmpty == true
+        ? item.photoUrl!
+        : showcaseAiImage(
+            'high action gym class ${item.className} coached by ${item.coachName ?? "trainer"} premium cinematic',
+            seed: item.gymClassId.hashCode.abs() % 100000,
+          );
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
@@ -520,8 +626,8 @@ class HomeScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  (s.day ?? 'Class').toUpperCase(),
-                  style: TextStyle(
+                  item.branchName.toUpperCase(),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
@@ -530,7 +636,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 const Spacer(),
                 Text(
-                  s.name.toUpperCase(),
+                  item.className.toUpperCase(),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -542,7 +648,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  s.trainer,
+                  item.coachName ?? '',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -576,7 +682,7 @@ class HomeScreen extends ConsumerWidget {
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(
-                                '${s.timeStart} to ${s.timeEnd}',
+                                '${item.timeStart} – ${item.timeEnd}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
@@ -590,25 +696,27 @@ class HomeScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0x66A0A0A0),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        levelLabel,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                    if (item.capacity != null) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0x66A0A0A0),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          '${item.capacity} spots',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ],
@@ -619,36 +727,47 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+  Widget _emptyStateCard(BuildContext context, String message) {
+    return AnimatedCard(
+      showShadow: false,
+      child: Center(
+        child: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ),
+    );
+  }
+
+  String _selectedBranchLabel(List<BranchSummary>? branches, String? selectedId) {
+    if (selectedId == null || branches == null) return '';
+    final match = branches.where((b) => b.branchId == selectedId).firstOrNull;
+    return match != null ? ' · ${match.branchName}' : '';
+  }
+
+  Color _occupancyColor(double ratio) {
+    if (ratio >= 0.9) return const Color(0xFFE53935); // red
+    if (ratio >= 0.65) return const Color(0xFFFB8C00); // orange
+    return const Color(0xFF43A047); // green
+  }
+
   void _openViewAll(BuildContext context, String title, List<String> items) {
     context.push(AppRoutes.viewAll, extra: {'title': title, 'items': items});
   }
 
-  void _openAllClasses(BuildContext context, List<GymSession> allClasses) {
+  void _openClassItems(
+    BuildContext context,
+    String title,
+    List<ClassScheduleItem> items,
+  ) {
     context.push(
       AppRoutes.viewAll,
       extra: {
-        'title': 'All Classes',
+        'title': title,
         'mode': 'classes',
-        'sessions': allClasses.map((s) => s.toMap()).toList(),
+        'sessions': items.map((item) => item.toMap()).toList(),
       },
     );
-  }
-
-  List<GymSession> _classesForToday(List<GymSession> allClasses) {
-    final today = _weekdayName(DateTime.now().weekday);
-    return allClasses.where((session) => session.day == today).toList();
-  }
-
-  String _weekdayName(int weekday) {
-    return switch (weekday) {
-      DateTime.monday => 'Monday',
-      DateTime.tuesday => 'Tuesday',
-      DateTime.wednesday => 'Wednesday',
-      DateTime.thursday => 'Thursday',
-      DateTime.friday => 'Friday',
-      DateTime.saturday => 'Saturday',
-      DateTime.sunday => 'Sunday',
-      _ => '',
-    };
   }
 }

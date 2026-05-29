@@ -84,16 +84,48 @@ class AuthRepositoryImpl implements AuthRepository {
         email: data['email'] as String?,
         profileImageUrl: data['profileImageUrl'] as String?,
         membershipNumber: data['membershipNumber'] as String?,
+        memberPackageId: data['memberPackageId'] as String?,
         planName: data['planName'] as String?,
         totalSessions: data['totalSessions'] as int?,
         remainingSessions: data['remainingSessions'] as int?,
         expiryDate: data['expiryDate']?.toString(),
         packageStatus: data['packageStatus'] as String?,
+        invitationsRemaining: data['invitationsRemaining'] as int?,
+        inBodyRemaining: data['inBodyRemaining'] as int?,
+        ptSessionsRemaining: data['ptSessionsRemaining'] as int?,
+        freezeAllowanceDays: data['freezeAllowanceDays'] as int?,
+        freezeRemainingDays: data['freezeRemainingDays'] as int?,
+        isFrozen: data['isFrozen'] as bool? ?? false,
+        frozenFromDate: data['frozenFromDate']?.toString(),
+        frozenUntilDate: data['frozenUntilDate']?.toString(),
         token: token,
       );
     } else {
       throw Exception('Failed to load profile');
     }
+  }
+
+  /// Returns updated [UserProfile] on success, throws on failure.
+  Future<UserProfile> freezePackage({
+    required String token,
+    required int durationDays,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/api/auth/freeze'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'durationDays': durationDays}),
+    );
+
+    if (response.statusCode == 200) {
+      // Re-fetch the full profile so all perk counters are up to date
+      return getProfile(token);
+    }
+
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    throw Exception(body['message'] ?? 'Failed to freeze package.');
   }
 
   @override

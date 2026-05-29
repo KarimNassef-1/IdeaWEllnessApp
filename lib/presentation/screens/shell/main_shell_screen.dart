@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/navigation/app_routes.dart';
-import '../beyond/beyond_screen.dart';
 import '../home/home_screen.dart';
 import '../profile/profile_screen.dart';
 import '../rewards/rewards_screen.dart';
+import '../workout/workout_screen.dart';
 
 class MainShellScreen extends StatefulWidget {
   const MainShellScreen({super.key});
@@ -21,7 +21,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
   final _screens = const [
     HomeScreen(),
     RewardsScreen(),
-    BeyondScreen(),
+    WorkoutScreen(),
     ProfileScreen(),
   ];
 
@@ -120,8 +120,8 @@ class _MainShellScreenState extends State<MainShellScreen> {
                 const SizedBox(width: 48),
                 Expanded(
                   child: _NavItem(
-                    icon: Icons.auto_awesome,
-                    label: 'Beyond',
+                    icon: Icons.fitness_center_rounded,
+                    label: 'Workout',
                     selected: _index == 2,
                     onTap: () => _goToTab(2),
                   ),

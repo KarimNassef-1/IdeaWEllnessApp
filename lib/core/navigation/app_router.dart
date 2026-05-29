@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../domain/entities/gym_session.dart';
 import '../../presentation/screens/beyond/article_screen.dart';
+import '../../presentation/screens/workout/exercise_detail_screen.dart';
+import '../../presentation/screens/workout/exercise_picker_screen.dart';
+import '../../presentation/screens/workout/plan_detail_screen.dart';
 import '../../presentation/screens/common/view_all_screen.dart';
 import '../../presentation/screens/login/login_screen.dart';
 import '../../presentation/screens/partner/partner_detail_screen.dart';
@@ -100,6 +103,33 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => _animatedPage(
           state: state,
           child: const SettingsScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.exerciseDetail,
+        pageBuilder: (context, state) => _animatedPage(
+          state: state,
+          child: ExerciseDetailScreen(
+            exerciseId: state.extra as String,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.workoutPlanDetail,
+        pageBuilder: (context, state) => _animatedPage(
+          state: state,
+          child: PlanDetailScreen(
+            planId: state.extra as String,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.exerciseLibraryPicker,
+        pageBuilder: (context, state) => _animatedPage(
+          state: state,
+          child: ExercisePickerScreen(
+            planId: state.extra as String,
+          ),
         ),
       ),
     ],
