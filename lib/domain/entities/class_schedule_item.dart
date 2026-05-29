@@ -55,15 +55,15 @@ class TodayClasses {
   final List<ClassScheduleItem> branchClasses;
 
   factory TodayClasses.fromJson(Map<String, dynamic> json) {
-    List<ClassScheduleItem> _parse(String key) =>
+    List<ClassScheduleItem> parse(String key) =>
         ((json[key] as List<dynamic>?) ?? [])
             .whereType<Map<String, dynamic>>()
             .map(ClassScheduleItem.fromJson)
             .toList();
 
     return TodayClasses(
-      myClasses:     _parse('myClasses'),
-      branchClasses: _parse('branchClasses'),
+      myClasses:     parse('myClasses'),
+      branchClasses: parse('branchClasses'),
     );
   }
 }

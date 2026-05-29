@@ -6,7 +6,7 @@ import '../../domain/entities/exercise.dart';
 import '../../domain/entities/workout_plan.dart';
 
 class WorkoutRepository {
-  static const _base = '${ApiConfig.baseUrl}/api/workout';
+  static String get _base => '${ApiConfig.baseUrl}/api/workout';
 
   // ── Exercise Library ───────────────────────────────────────────────────────
 
@@ -95,10 +95,10 @@ class WorkoutRepository {
       headers: _h(token),
       body: jsonEncode({
         'exerciseId': exerciseId,
-        if (sets != null) 'sets': sets,
-        if (reps != null) 'reps': reps,
-        if (durationSeconds != null) 'durationSeconds': durationSeconds,
-        if (restSeconds != null) 'restSeconds': restSeconds,
+        'sets': sets,
+        'reps': reps,
+        'durationSeconds': durationSeconds,
+        'restSeconds': restSeconds,
       }),
     );
     _check(res, 'add exercise');

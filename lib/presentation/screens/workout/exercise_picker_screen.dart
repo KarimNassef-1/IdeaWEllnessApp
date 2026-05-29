@@ -69,7 +69,7 @@ class _ExercisePickerScreenState
           // Category chips
           categories.when(
             loading: () => const SizedBox(height: 40),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
             data: (cats) => SizedBox(
               height: 40,
               child: ListView(
@@ -102,12 +102,12 @@ class _ExercisePickerScreenState
             child: exercises.when(
               loading: () =>
                   const Center(child: CircularProgressIndicator()),
-              error: (_, __) =>
+              error: (_, _) =>
                   const Center(child: Text('Could not load exercises.')),
               data: (items) => ListView.separated(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
                 itemCount: items.length,
-                separatorBuilder: (_, __) =>
+                separatorBuilder: (_, _) =>
                     const SizedBox(height: 8),
                 itemBuilder: (context, index) => _PickerTile(
                   exercise: items[index],

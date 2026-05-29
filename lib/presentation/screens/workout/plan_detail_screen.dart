@@ -33,7 +33,7 @@ class PlanDetailScreen extends ConsumerWidget {
       ),
       body: plan.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) =>
+        error: (_, _) =>
             const Center(child: Text('Could not load plan.')),
         data: (detail) => detail.exercises.isEmpty
             ? Center(
@@ -65,7 +65,7 @@ class PlanDetailScreen extends ConsumerWidget {
             : ListView.separated(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 120),
                 itemCount: detail.exercises.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
                 itemBuilder: (context, index) => _PlanExerciseTile(
                   planId: planId,
                   entry: detail.exercises[index],

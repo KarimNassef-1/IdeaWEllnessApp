@@ -62,7 +62,7 @@ class _ExerciseLibraryTabState extends ConsumerState<ExerciseLibraryTab> {
         // ── Category chips ──────────────────────────────────────────
         categories.when(
           loading: () => const SizedBox(height: 40),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, _) => const SizedBox.shrink(),
           data: (cats) => SizedBox(
             height: 40,
             child: ListView(
@@ -95,7 +95,7 @@ class _ExerciseLibraryTabState extends ConsumerState<ExerciseLibraryTab> {
           child: exercises.when(
             loading: () =>
                 const Center(child: CircularProgressIndicator()),
-            error: (_, __) => const Center(
+            error: (_, _) => const Center(
                 child: Text('Could not load exercises.')),
             data: (items) {
               if (items.isEmpty) {
@@ -104,7 +104,7 @@ class _ExerciseLibraryTabState extends ConsumerState<ExerciseLibraryTab> {
               return ListView.separated(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
                 itemCount: items.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
                 itemBuilder: (context, index) =>
                     _ExerciseTile(exercise: items[index]),
               );
