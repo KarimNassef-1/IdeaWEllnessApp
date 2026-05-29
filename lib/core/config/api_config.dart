@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
@@ -14,8 +12,10 @@ class ApiConfig {
 
     if (kIsWeb) {
       return 'https://localhost:7057';
-    } else if (Platform.isAndroid || Platform.isIOS) {
-      return 'http://192.168.1.7:5159';
+    } else if (defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:5159';
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return 'http://localhost:5159';
     } else {
       return 'https://localhost:7057';
     }

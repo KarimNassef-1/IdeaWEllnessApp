@@ -61,7 +61,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
     return date.day.toString();
   }
 
-  List<GymSession> _sessionsForDay(String weekdayShort) {
+  List<GymSession> _sessionsForDay(String weekdayShort, DateTime selectedDate) {
     const fullToShort = {
       'Monday': 'Mon',
       'Tuesday': 'Tue',
@@ -71,9 +71,15 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
       'Saturday': 'Sat',
       'Sunday': 'Sun',
     };
+    final selectedIsToday = _isSameDate(
+      _normalizeDate(selectedDate),
+      _normalizeDate(DateTime.now()),
+    );
 
     return widget.sessions.where((session) {
       final day = (session.day ?? '').trim();
+      if (day.isEmpty) return selectedIsToday;
+
       final short = fullToShort[day] ?? day;
       return short.toLowerCase() == weekdayShort.toLowerCase();
     }).toList();
@@ -239,7 +245,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
       final timelineDates = _timelineDates();
       final selectedDate = _selectedDate ?? timelineDates.first;
       final selectedDayName = _weekdayName(selectedDate.weekday);
-      final daySessions = _sessionsForDay(selectedDayName);
+      final daySessions = _sessionsForDay(selectedDayName, selectedDate);
       final groupedByTime = _sessionsGroupedByTime(daySessions);
 
       return Scaffold(

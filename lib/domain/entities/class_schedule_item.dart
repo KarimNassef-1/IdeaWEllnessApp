@@ -9,6 +9,7 @@ class ClassScheduleItem {
     this.coachPhotoUrl,
     this.capacity,
     this.photoUrl,
+    this.day,
   });
 
   final String gymClassId;
@@ -20,6 +21,7 @@ class ClassScheduleItem {
   final String? coachPhotoUrl;
   final int? capacity;
   final String? photoUrl;
+  final String? day;
 
   /// Converts to the map format expected by the existing view-all screen.
   Map<String, String> toMap() => {
@@ -29,9 +31,22 @@ class ClassScheduleItem {
     'time_end': timeEnd,
     'trainer': coachName ?? '',
     'type': '',
-    'day': '',
+    'day': day ?? _todayName(),
     'category': '',
   };
+
+  String _todayName() {
+    const names = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+    return names[DateTime.now().weekday - 1];
+  }
 
   factory ClassScheduleItem.fromJson(Map<String, dynamic> json) {
     return ClassScheduleItem(
@@ -44,15 +59,23 @@ class ClassScheduleItem {
       coachPhotoUrl: json['coachPhotoUrl'] as String?,
       capacity:      json['capacity']      as int?,
       photoUrl:      json['photoUrl']      as String?,
+      day:           json['day']           as String?,
     );
   }
 }
 
 class TodayClasses {
-  const TodayClasses({required this.myClasses, required this.branchClasses});
+  const TodayClasses({
+    required this.myClasses,
+    required this.branchClasses,
+    this.myWeekClasses = const [],
+    this.branchWeekClasses = const [],
+  });
 
   final List<ClassScheduleItem> myClasses;
   final List<ClassScheduleItem> branchClasses;
+  final List<ClassScheduleItem> myWeekClasses;
+  final List<ClassScheduleItem> branchWeekClasses;
 
   factory TodayClasses.fromJson(Map<String, dynamic> json) {
     List<ClassScheduleItem> parse(String key) =>
@@ -64,6 +87,8 @@ class TodayClasses {
     return TodayClasses(
       myClasses:     parse('myClasses'),
       branchClasses: parse('branchClasses'),
+      myWeekClasses: parse('myWeekClasses'),
+      branchWeekClasses: parse('branchWeekClasses'),
     );
   }
 }

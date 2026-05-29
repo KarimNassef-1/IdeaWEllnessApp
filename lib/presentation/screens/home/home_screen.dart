@@ -91,7 +91,7 @@ class HomeScreen extends ConsumerWidget {
                   onTap: () => _openClassItems(
                     context,
                     'Full Schedule',
-                    todayClassesAsync.valueOrNull?.branchClasses ?? [],
+                    todayClassesAsync.valueOrNull?.branchWeekClasses ?? [],
                   ),
                 ),
                 CircularShortcutButton(
@@ -161,7 +161,7 @@ class HomeScreen extends ConsumerWidget {
               onAction: () => _openClassItems(
                 context,
                 'My Classes Today',
-                todayClassesAsync.valueOrNull?.myClasses ?? [],
+                todayClassesAsync.valueOrNull?.myWeekClasses ?? [],
               ),
             ),
             _todayClassesStrip(context, todayClassesAsync, useMyClasses: true),
@@ -172,7 +172,7 @@ class HomeScreen extends ConsumerWidget {
               onAction: () => _openClassItems(
                 context,
                 "Today's Classes",
-                todayClassesAsync.valueOrNull?.branchClasses ?? [],
+                todayClassesAsync.valueOrNull?.branchWeekClasses ?? [],
               ),
             ),
             _todayClassesStrip(context, todayClassesAsync, useMyClasses: false),
