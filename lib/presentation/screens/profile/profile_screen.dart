@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/navigation/app_routes.dart';
+import '../../../domain/entities/user_profile.dart';
 import '../../state/auth_notifier.dart';
 import '../../widgets/animated_card.dart';
 
@@ -240,7 +241,7 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  bool _hasAnyPerk(user) =>
+  bool _hasAnyPerk(UserProfile? user) =>
       user != null &&
       (user.freezeRemainingDays != null ||
           user.invitationsRemaining != null ||

@@ -6,7 +6,7 @@ import '../../domain/entities/exercise.dart';
 import '../../domain/entities/workout_plan.dart';
 
 class WorkoutRepository {
-  static const _base = '${ApiConfig.baseUrl}/api/workout';
+  static String get _base => '${ApiConfig.baseUrl}/api/workout';
 
   // ── Exercise Library ───────────────────────────────────────────────────────
 
