@@ -15,7 +15,7 @@ class ApiConfig {
     } else if (defaultTargetPlatform == TargetPlatform.android) {
       return 'http://10.0.2.2:5159';
     } else if (defaultTargetPlatform == TargetPlatform.iOS) {
-      return 'http://localhost:5159';
+      return 'https://transpleural-madeleine-lodgeable.ngrok-free.dev';
     } else {
       return 'https://localhost:7057';
     }
