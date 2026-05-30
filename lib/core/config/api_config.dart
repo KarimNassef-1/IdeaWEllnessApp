@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 
 class ApiConfig {
   static const String _configuredBaseUrl = String.fromEnvironment(
-    'https://transpleural-madeleine-lodgeable.ngrok-free.dev',
+    'API_BASE_URL',
   );
 
   static String get baseUrl {

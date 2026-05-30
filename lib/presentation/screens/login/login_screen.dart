@@ -43,8 +43,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Invalid email or password.')),
     );
-    print('EMAIL RAW = ${_emailController.text}');
-print('PASSWORD RAW = ${_passwordController.text}');
   }
 
   @override
@@ -141,6 +139,9 @@ print('PASSWORD RAW = ${_passwordController.text}');
                           controller: _emailController,
                           textInputAction: TextInputAction.next,
                           keyboardType: TextInputType.emailAddress,
+                          textCapitalization: TextCapitalization.none,
+                          autocorrect: false,
+                          enableSuggestions: false,
                           decoration: InputDecoration(
                             labelText: 'Email',
                             prefixIcon: const Icon(Icons.email_rounded),
@@ -161,6 +162,11 @@ print('PASSWORD RAW = ${_passwordController.text}');
                         TextField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
+                          keyboardType: TextInputType.visiblePassword,
+                          textInputAction: TextInputAction.done,
+                          textCapitalization: TextCapitalization.none,
+                          autocorrect: false,
+                          enableSuggestions: false,
                           onSubmitted: (_) => _login(),
                           decoration: InputDecoration(
                             labelText: 'Password',

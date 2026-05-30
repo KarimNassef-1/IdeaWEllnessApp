@@ -6,11 +6,7 @@ class AppTheme {
   const AppTheme._();
 
   static TextTheme _buildTextTheme(TextTheme base) {
-    final premium = base.apply(
-      fontFamily: 'Sportive',
-      bodyColor: base.bodyMedium?.color,
-      displayColor: base.displayMedium?.color,
-    );
+    final premium = base;
     return premium.copyWith(
       displayLarge: premium.displayLarge?.copyWith(fontSize: 52, fontWeight: FontWeight.w800, height: 1.06),
       displayMedium: premium.displayMedium?.copyWith(fontSize: 42, fontWeight: FontWeight.w800, height: 1.08),
