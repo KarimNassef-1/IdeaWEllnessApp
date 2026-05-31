@@ -48,7 +48,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> restoreSession() async {
     state = state.copyWith(loading: true);
     final user = await _repo.getPersistedSession();
-    state = state.copyWith(loading: false, user: user, clearUser: user == null);
+    if (user == null) {
+      state = state.copyWith(loading: false, clearUser: true);
+      return;
+    }
+    try {
+      final fresh = await _repo.refreshProfile(user.token!);
+      state = state.copyWith(loading: false, user: fresh);
+    } catch (_) {
+      // No network — fall back to cached basic profile.
+      state = state.copyWith(loading: false, user: user);
+    }
   }
 
 Future<bool> login({required String email, required String password}) async {

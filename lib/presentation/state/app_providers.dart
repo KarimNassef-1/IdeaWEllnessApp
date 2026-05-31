@@ -107,5 +107,9 @@ final todayClassesProvider = FutureProvider<TodayClasses>((ref) async {
   }
 
   final branchId = ref.watch(selectedClassBranchIdProvider);
-  return ref.watch(dashboardRepositoryProvider).todayClasses(token, branchId: branchId);
+  try {
+    return await ref.watch(dashboardRepositoryProvider).todayClasses(token, branchId: branchId);
+  } catch (_) {
+    return const TodayClasses(myClasses: [], branchClasses: []);
+  }
 });

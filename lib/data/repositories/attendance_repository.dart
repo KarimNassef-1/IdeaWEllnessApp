@@ -15,6 +15,7 @@ class AttendanceRepository {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
+        'ngrok-skip-browser-warning': 'true',
       },
       body: jsonEncode({
         'qrCodeValue': qrCodeValue,

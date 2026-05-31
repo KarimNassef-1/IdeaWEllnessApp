@@ -36,7 +36,10 @@ class AuthRepositoryImpl implements AuthRepository {
   }) async {
     final response = await http.post(
       Uri.parse('$_baseUrl/api/auth/login'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+      },
       body: jsonEncode({'email': email, 'password': password}),
     );
 
@@ -63,12 +66,16 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  @override
+  Future<UserProfile> refreshProfile(String token) => getProfile(token);
+
   Future<UserProfile> getProfile(String token) async {
     final response = await http.get(
       Uri.parse('$_baseUrl/api/auth/me'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
+        'ngrok-skip-browser-warning': 'true',
       },
     );
 
@@ -115,6 +122,7 @@ class AuthRepositoryImpl implements AuthRepository {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
+        'ngrok-skip-browser-warning': 'true',
       },
       body: jsonEncode({'durationDays': durationDays}),
     );

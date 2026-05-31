@@ -143,6 +143,7 @@ class WorkoutRepository {
   Map<String, String> _h(String token) => {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
+        'ngrok-skip-browser-warning': 'true',
       };
 
   void _check(http.Response res, String label) {

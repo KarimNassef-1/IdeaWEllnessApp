@@ -8,5 +8,7 @@ abstract class AuthRepository {
     required String password,
   });
 
+  Future<UserProfile> refreshProfile(String token);
+
   Future<void> signOut();
 }
