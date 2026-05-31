@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/repositories/content_repository_impl.dart';
@@ -109,7 +110,8 @@ final todayClassesProvider = FutureProvider<TodayClasses>((ref) async {
   final branchId = ref.watch(selectedClassBranchIdProvider);
   try {
     return await ref.watch(dashboardRepositoryProvider).todayClasses(token, branchId: branchId);
-  } catch (_) {
+  } catch (e, st) {
+    debugPrint('todayClassesProvider error: $e\n$st');
     return const TodayClasses(myClasses: [], branchClasses: []);
   }
 });

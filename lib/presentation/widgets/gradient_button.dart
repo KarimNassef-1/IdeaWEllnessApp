@@ -11,7 +11,7 @@ class GradientButton extends StatefulWidget {
   });
 
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final IconData? icon;
 
   @override
@@ -32,38 +32,44 @@ class _GradientButtonState extends State<GradientButton>
   }
 
   Future<void> _tap() async {
+    if (widget.onPressed == null) return;
     await _controller.forward();
     await _controller.reverse();
-    widget.onPressed();
+    widget.onPressed!();
   }
 
   @override
   Widget build(BuildContext context) {
+    final disabled = widget.onPressed == null;
     return ScaleTransition(
       scale: Tween<double>(begin: 1, end: 0.95).animate(
         CurvedAnimation(parent: _controller, curve: Curves.easeOut),
       ),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          gradient: const LinearGradient(
-            colors: [AppColors.orange, AppColors.orangeSoft],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.orange.withValues(alpha: 0.18),
-              blurRadius: 14,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
+      child: Opacity(
+        opacity: disabled ? 0.45 : 1.0,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            onTap: _tap,
+            gradient: const LinearGradient(
+              colors: [AppColors.orange, AppColors.orangeSoft],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: disabled
+                ? []
+                : [
+                    BoxShadow(
+                      color: AppColors.orange.withValues(alpha: 0.18),
+                      blurRadius: 14,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(18),
+              onTap: disabled ? null : _tap,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
               child: Row(
@@ -83,6 +89,7 @@ class _GradientButtonState extends State<GradientButton>
                 ],
               ),
             ),
+          ),
           ),
         ),
       ),

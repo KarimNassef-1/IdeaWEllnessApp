@@ -80,7 +80,7 @@ Future<bool> login({required String email, required String password}) async {
     if (token == null) return 'Not authenticated.';
 
     try {
-      final updated = await (_repo as dynamic).freezePackage(
+      final updated = await _repo.freezePackage(
         token: token,
         durationDays: durationDays,
       );

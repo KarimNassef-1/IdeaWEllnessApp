@@ -85,7 +85,7 @@ class AuthRepositoryImpl implements AuthRepository {
       return UserProfile(
         username: data['fullName'] as String,
         gymId: data['memberId'] as String,
-        coins: 0,
+        coins: data['coins'] as int? ?? 0,
         avatarAsset: 'img/idea-profile.png',
         memberId: data['memberId'] as String?,
         email: data['email'] as String?,
@@ -113,7 +113,7 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  /// Returns updated [UserProfile] on success, throws on failure.
+  @override
   Future<UserProfile> freezePackage({
     required String token,
     required int durationDays,

@@ -106,7 +106,24 @@ class RewardsScreen extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Text('${reward.coinCost} coins'),
                     const SizedBox(height: 8),
-                    GradientButton(label: 'Claim', onPressed: () {}),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GradientButton(
+                            label: 'Claim — ${reward.coinCost} coins',
+                            onPressed: user == null || (user.coins) < reward.coinCost
+                                ? null
+                                : () {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Rewards redemption coming soon.'),
+                                      ),
+                                    );
+                                  },
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               );

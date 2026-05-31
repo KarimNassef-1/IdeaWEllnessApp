@@ -272,10 +272,10 @@ class ContentRepositoryImpl implements ContentRepository {
   @override
   List<Map<String, String>> partners() {
     return [
-      {'name': 'Hydra Fuel', 'image': _img('hydration drink brand product photography', 41)},
-      {'name': 'Alpha Wear', 'image': _img('athletic apparel minimal campaign portrait', 42)},
-      {'name': 'Nutri Co.', 'image': _img('nutrition brand premium food supplements flatlay', 43)},
-      {'name': 'Pulse Labs', 'image': _img('fitness tech wearable device branding', 44)},
+      {'name': 'Hydra Fuel',  'image': _img('hydration drink brand product photography', 41),        'url': 'https://hydrafuel.com'},
+      {'name': 'Alpha Wear',  'image': _img('athletic apparel minimal campaign portrait', 42),        'url': 'https://alphawear.com'},
+      {'name': 'Nutri Co.',   'image': _img('nutrition brand premium food supplements flatlay', 43),  'url': 'https://nutrico.com'},
+      {'name': 'Pulse Labs',  'image': _img('fitness tech wearable device branding', 44),             'url': 'https://pulselabs.com'},
     ];
   }
 

@@ -94,6 +94,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             child: PartnerDetailScreen(
               name: payload?['name'] as String? ?? 'Partner',
               image: payload?['image'] as String? ?? 'img/idea-profile.png',
+              url: payload?['url'] as String?,
             ),
           );
         },

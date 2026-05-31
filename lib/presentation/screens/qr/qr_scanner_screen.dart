@@ -195,9 +195,9 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        const Text(
-                          'Heliopolis Branch - Check-In',
-                          style: TextStyle(
+                        Text(
+                          '${ref.watch(authNotifierProvider).user?.username ?? 'Member'} — Check-In',
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 15,
                             fontWeight: FontWeight.w600,

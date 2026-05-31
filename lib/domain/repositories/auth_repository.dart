@@ -10,5 +10,10 @@ abstract class AuthRepository {
 
   Future<UserProfile> refreshProfile(String token);
 
+  Future<UserProfile> freezePackage({
+    required String token,
+    required int durationDays,
+  });
+
   Future<void> signOut();
 }
