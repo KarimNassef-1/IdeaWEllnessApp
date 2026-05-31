@@ -70,7 +70,7 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 _InfoRow(label: 'Sessions', value: _sessionsLabel(user?.remainingSessions, user?.totalSessions)),
                 const SizedBox(height: 8),
-                _InfoRow(label: 'Valid from', value: user?.expiryDate != null ? _formatDate(user!.expiryDate!) : 'N/A'),
+                _InfoRow(label: 'Valid from', value: user?.validFromDate != null ? _formatDate(user!.validFromDate!) : 'N/A'),
                 const SizedBox(height: 8),
                 _InfoRow(label: 'Expiry', value: user?.expiryDate != null ? _formatDate(user!.expiryDate!) : 'N/A'),
 

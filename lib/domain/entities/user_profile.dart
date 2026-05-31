@@ -13,6 +13,7 @@ class UserProfile {
     this.planName,
     this.totalSessions,
     this.remainingSessions,
+    this.validFromDate,
     this.expiryDate,
     this.packageStatus,
     this.invitationsRemaining,
@@ -41,6 +42,7 @@ class UserProfile {
   final String? planName;
   final int? totalSessions;
   final int? remainingSessions;
+  final String? validFromDate;
   final String? expiryDate;
   final String? packageStatus;
 
@@ -70,6 +72,7 @@ class UserProfile {
     String? planName,
     int? totalSessions,
     int? remainingSessions,
+    String? validFromDate,
     String? expiryDate,
     String? packageStatus,
     int? invitationsRemaining,
@@ -95,6 +98,7 @@ class UserProfile {
       planName: planName ?? this.planName,
       totalSessions: totalSessions ?? this.totalSessions,
       remainingSessions: remainingSessions ?? this.remainingSessions,
+      validFromDate: validFromDate ?? this.validFromDate,
       expiryDate: expiryDate ?? this.expiryDate,
       packageStatus: packageStatus ?? this.packageStatus,
       invitationsRemaining: invitationsRemaining ?? this.invitationsRemaining,

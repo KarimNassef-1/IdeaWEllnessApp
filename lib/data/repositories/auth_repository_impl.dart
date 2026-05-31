@@ -95,6 +95,7 @@ class AuthRepositoryImpl implements AuthRepository {
         planName: data['planName'] as String?,
         totalSessions: data['totalSessions'] as int?,
         remainingSessions: data['remainingSessions'] as int?,
+        validFromDate: data['validFromDate']?.toString(),
         expiryDate: data['expiryDate']?.toString(),
         packageStatus: data['packageStatus'] as String?,
         invitationsRemaining: data['invitationsRemaining'] as int?,

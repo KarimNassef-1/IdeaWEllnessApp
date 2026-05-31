@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../domain/entities/exercise.dart';
 import '../../state/app_providers.dart';
@@ -137,6 +138,15 @@ class _ExerciseDetailBody extends StatelessWidget {
                 Text(exercise.instructions!),
                 const SizedBox(height: 16),
               ],
+
+              // Video
+              if (exercise.videoUrl != null &&
+                  exercise.videoUrl!.isNotEmpty) ...[
+                _SectionTitle('Video Tutorial'),
+                const SizedBox(height: 10),
+                _VideoButton(url: exercise.videoUrl!),
+                const SizedBox(height: 16),
+              ],
             ]),
           ),
         ),
@@ -212,6 +222,77 @@ class _MuscleBadge extends StatelessWidget {
         '${muscle.isPrimary ? '● ' : '○ '}${muscle.muscleGroupName}',
         style: TextStyle(
             fontSize: 12, color: color, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+}
+
+class _VideoButton extends StatelessWidget {
+  const _VideoButton({required this.url});
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    final isYouTube =
+        url.contains('youtube.com') || url.contains('youtu.be');
+    return GestureDetector(
+      onTap: () async {
+        final uri = Uri.tryParse(url);
+        if (uri != null && await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: isYouTube
+              ? const Color(0xFFFF0000).withValues(alpha: 0.1)
+              : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isYouTube
+                ? const Color(0xFFFF0000).withValues(alpha: 0.3)
+                : Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              isYouTube ? Icons.smart_display_rounded : Icons.play_circle_rounded,
+              color: isYouTube
+                  ? const Color(0xFFFF0000)
+                  : Theme.of(context).colorScheme.primary,
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isYouTube ? 'Watch on YouTube' : 'Watch Video',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: isYouTube
+                          ? const Color(0xFFFF0000)
+                          : Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  Text(
+                    'Opens in your browser',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.open_in_new_rounded,
+              size: 16,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+            ),
+          ],
+        ),
       ),
     );
   }
