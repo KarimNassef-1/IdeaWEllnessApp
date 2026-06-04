@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../data/repositories/attendance_repository.dart';
+import '../../state/app_providers.dart';
 import '../../state/auth_notifier.dart';
 import 'qr_session_confirmation_screen.dart';
 
@@ -59,7 +60,24 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
       final result = await _checkIn(code);
       if (!mounted) return;
 
-      if (result != null) {
+      // The API returns 200 OK with success=false for business-rule failures
+      // (e.g. "you already checked in within the last 8 hours"). Surface those
+      // as red snackbars and stay on the scanner so the user can retry — do
+      // NOT navigate to the "Check-in Confirmed" screen for a failed check-in.
+      if (result != null && !result.success) {
+        setState(() => _submitting = false);
+        final msg = result.message.isNotEmpty ? result.message : 'Check-in failed.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(msg),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      } else if (result != null) {
+        // Real success — refresh branch capacity AND packages (session counts)
+        ref.invalidate(branchesProvider);
+        ref.invalidate(myPackagesProvider);
+
         setState(() {
           _submitting = false;
           _showSuccess = true;
@@ -78,6 +96,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: Colors.red.shade700,
         ),
       );
     }

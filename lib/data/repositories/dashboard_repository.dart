@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import '../../core/config/api_config.dart';
 import '../../domain/entities/branch_summary.dart';
 import '../../domain/entities/class_schedule_item.dart';
+import '../../domain/entities/member_package_item.dart';
+import '../../domain/entities/member_partnership.dart';
 import '../../domain/entities/subscribed_class.dart';
 
 class DashboardRepository {
@@ -37,6 +39,36 @@ class DashboardRepository {
     return (jsonDecode(response.body) as List<dynamic>)
         .whereType<Map<String, dynamic>>()
         .map(SubscribedClass.fromJson)
+        .toList();
+  }
+
+  Future<List<MemberPackageItem>> myPackages(String token) async {
+    final response = await http.get(
+      Uri.parse('${ApiConfig.baseUrl}/api/dashboard/my-packages'),
+      headers: _headers(token),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to load your packages.');
+    }
+
+    return (jsonDecode(response.body) as List<dynamic>)
+        .whereType<Map<String, dynamic>>()
+        .map(MemberPackageItem.fromJson)
+        .toList();
+  }
+
+  Future<List<MemberPartnership>> myPartnerships(String token) async {
+    final response = await http.get(
+      Uri.parse('${ApiConfig.baseUrl}/api/dashboard/my-partnerships'),
+      headers: _headers(token),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to load partnerships.');
+    }
+    return (jsonDecode(response.body) as List<dynamic>)
+        .whereType<Map<String, dynamic>>()
+        .map(MemberPartnership.fromJson)
         .toList();
   }
 
