@@ -15,10 +15,13 @@ workflows:
       - name: Set up code signing
         script: |
           keychain initialize
-          # Creates the distribution certificate AND App Store provisioning
-          # profile if they don't exist yet, using the connected API key.
+          # Creates a distribution certificate tied to our own private key
+          # (CERTIFICATE_PRIVATE_KEY env var) plus the App Store provisioning
+          # profile, using the connected API key. Because we supply the private
+          # key, the cert can actually be used to sign.
           app-store-connect fetch-signing-files "com.ideawellness.app" \
             --type IOS_APP_STORE \
+            --certificate-key @env:CERTIFICATE_PRIVATE_KEY \
             --create
           keychain add-certificates
           xcode-project use-profiles
