@@ -45,6 +45,7 @@ class ExerciseListItem {
     required this.categoryName,
     required this.difficulty,
     this.photoUrl,
+    this.videoUrl,
     this.equipment,
     this.primaryMuscles = const [],
   });
@@ -54,6 +55,7 @@ class ExerciseListItem {
   final String categoryName;
   final int difficulty;
   final String? photoUrl;
+  final String? videoUrl;
   final String? equipment;
   final List<String> primaryMuscles;
 
@@ -70,6 +72,7 @@ class ExerciseListItem {
         categoryName: json['categoryName'] as String? ?? '',
         difficulty: json['difficulty'] as int? ?? 1,
         photoUrl: json['photoUrl'] as String?,
+        videoUrl: json['videoUrl'] as String?,
         equipment: json['equipment'] as String?,
         primaryMuscles: ((json['primaryMuscles'] as List<dynamic>?) ?? [])
             .map((e) => e.toString())
@@ -84,17 +87,16 @@ class ExerciseDetail extends ExerciseListItem {
     required super.categoryName,
     required super.difficulty,
     super.photoUrl,
+    super.videoUrl,
     super.equipment,
     super.primaryMuscles,
     this.description,
     this.instructions,
-    this.videoUrl,
     this.muscleGroups = const [],
   });
 
   final String? description;
   final String? instructions;
-  final String? videoUrl;
   final List<MuscleGroupInfo> muscleGroups;
 
   factory ExerciseDetail.fromJson(Map<String, dynamic> json) => ExerciseDetail(
@@ -103,13 +105,13 @@ class ExerciseDetail extends ExerciseListItem {
         categoryName: json['categoryName'] as String? ?? '',
         difficulty: json['difficulty'] as int? ?? 1,
         photoUrl: json['photoUrl'] as String?,
+        videoUrl: json['videoUrl'] as String?,
         equipment: json['equipment'] as String?,
         primaryMuscles: ((json['primaryMuscles'] as List<dynamic>?) ?? [])
             .map((e) => e.toString())
             .toList(),
         description: json['description'] as String?,
         instructions: json['instructions'] as String?,
-        videoUrl: json['videoUrl'] as String?,
         muscleGroups: ((json['muscleGroups'] as List<dynamic>?) ?? [])
             .whereType<Map<String, dynamic>>()
             .map(MuscleGroupInfo.fromJson)

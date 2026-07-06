@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../data/repositories/attendance_repository.dart';
+import '../../state/app_providers.dart';
 import '../../state/auth_notifier.dart';
 import 'qr_session_confirmation_screen.dart';
 
@@ -59,7 +60,41 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
       final result = await _checkIn(code);
       if (!mounted) return;
 
-      if (result != null) {
+      // Conflict — the member is eligible under both a class/session package and
+      // an open-gym package. The receptionist now makes that choice at the desk;
+      // the API has already recorded a PENDING scan. Tell the member to see the
+      // desk and stay on the scanner (this is NOT an error).
+      if (result != null && result.requiresChoice) {
+        setState(() => _submitting = false);
+        final msg = result.message.isNotEmpty
+            ? result.message
+            : 'Checked in — please see the reception desk to confirm your attendance.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(msg),
+            backgroundColor: _accentOrange,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+      // The API returns 200 OK with success=false for business-rule failures
+      // (e.g. "you already checked in within the last 8 hours"). Surface those
+      // as red snackbars and stay on the scanner so the user can retry — do
+      // NOT navigate to the "Check-in Confirmed" screen for a failed check-in.
+      else if (result != null && !result.success) {
+        setState(() => _submitting = false);
+        final msg = result.message.isNotEmpty ? result.message : 'Check-in failed.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(msg),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      } else if (result != null) {
+        // Real success — refresh branch capacity AND packages (session counts)
+        ref.invalidate(branchesProvider);
+        ref.invalidate(myPackagesProvider);
+
         setState(() {
           _submitting = false;
           _showSuccess = true;
@@ -78,6 +113,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: Colors.red.shade700,
         ),
       );
     }
@@ -97,71 +133,12 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
       throw Exception('Please log in again.');
     }
 
-    var result = await _attendanceRepository.checkIn(
+    // The member never picks the package anymore. If the scan is a conflict the
+    // API records a PENDING scan and returns requiresChoice=true; the receptionist
+    // resolves it at the desk. We just relay the result to the caller.
+    return _attendanceRepository.checkIn(
       token: token,
       qrCodeValue: code,
-    );
-
-    if (!result.requiresChoice) {
-      return result;
-    }
-
-    if (!mounted) return null;
-    final option = await _showAttendanceChoice(result);
-    if (option == null) return null;
-
-    result = await _attendanceRepository.checkIn(
-      token: token,
-      qrCodeValue: code,
-      option: option,
-    );
-
-    return result;
-  }
-
-  Future<AttendancePackageOption?> _showAttendanceChoice(
-    AttendanceCheckInResult result,
-  ) {
-    return showModalBottomSheet<AttendancePackageOption>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 6, 20, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Choose attendance type',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 8),
-                Text(result.message),
-                const SizedBox(height: 12),
-                ...result.options.map((option) {
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(
-                      option.attendanceMode == 'openGym'
-                          ? Icons.fitness_center_rounded
-                          : Icons.event_available_rounded,
-                    ),
-                    title: Text(option.label),
-                    subtitle: Text(
-                      option.remainingSessions == null
-                          ? option.packageName
-                          : '${option.packageName} - ${option.remainingSessions} remaining',
-                    ),
-                    onTap: () => Navigator.of(context).pop(option),
-                  );
-                }),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 

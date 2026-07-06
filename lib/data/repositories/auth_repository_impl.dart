@@ -106,6 +106,7 @@ class AuthRepositoryImpl implements AuthRepository {
         isFrozen: data['isFrozen'] as bool? ?? false,
         frozenFromDate: data['frozenFromDate']?.toString(),
         frozenUntilDate: data['frozenUntilDate']?.toString(),
+        mustChangePassword: data['mustChangePassword'] as bool? ?? false,
         token: token,
       );
     } else {
@@ -135,6 +136,36 @@ class AuthRepositoryImpl implements AuthRepository {
 
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     throw Exception(body['message'] ?? 'Failed to freeze package.');
+  }
+
+  @override
+  Future<UserProfile> changePassword({
+    required String token,
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/api/auth/change-password'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+        'ngrok-skip-browser-warning': 'true',
+      },
+      body: jsonEncode({
+        'currentPassword': currentPassword,
+        'newPassword': newPassword,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // Re-fetch profile so the cleared mustChangePassword flag is reflected.
+      return getProfile(token);
+    }
+
+    final body = response.body.isEmpty
+        ? <String, dynamic>{}
+        : jsonDecode(response.body) as Map<String, dynamic>;
+    throw Exception(body['message'] ?? 'Failed to change password.');
   }
 
   @override

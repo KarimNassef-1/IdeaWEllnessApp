@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../../../domain/entities/exercise.dart';
 import '../../state/app_providers.dart';
@@ -139,12 +140,12 @@ class _ExerciseDetailBody extends StatelessWidget {
                 const SizedBox(height: 16),
               ],
 
-              // Video
+              // Video — embedded YouTube player when possible
               if (exercise.videoUrl != null &&
                   exercise.videoUrl!.isNotEmpty) ...[
                 _SectionTitle('Video Tutorial'),
                 const SizedBox(height: 10),
-                _VideoButton(url: exercise.videoUrl!),
+                _VideoPlayer(url: exercise.videoUrl!),
                 const SizedBox(height: 16),
               ],
             ]),
@@ -227,17 +228,62 @@ class _MuscleBadge extends StatelessWidget {
   }
 }
 
-class _VideoButton extends StatelessWidget {
-  const _VideoButton({required this.url});
+class _VideoPlayer extends StatefulWidget {
+  const _VideoPlayer({required this.url});
   final String url;
 
   @override
+  State<_VideoPlayer> createState() => _VideoPlayerState();
+}
+
+class _VideoPlayerState extends State<_VideoPlayer> {
+  YoutubePlayerController? _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    final videoId = YoutubePlayer.convertUrlToId(widget.url);
+    if (videoId != null && videoId.isNotEmpty) {
+      _controller = YoutubePlayerController(
+        initialVideoId: videoId,
+        flags: const YoutubePlayerFlags(
+          autoPlay: false,
+          mute: false,
+          enableCaption: true,
+        ),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isYouTube =
-        url.contains('youtube.com') || url.contains('youtu.be');
+    final controller = _controller;
+    if (controller != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: YoutubePlayer(
+          controller: controller,
+          showVideoProgressIndicator: true,
+          progressIndicatorColor: const Color(0xFFFF0000),
+          progressColors: const ProgressBarColors(
+            playedColor: Color(0xFFFF0000),
+            handleColor: Color(0xFFFF0000),
+          ),
+          aspectRatio: 16 / 9,
+        ),
+      );
+    }
+
+    // Fallback for non-YouTube URLs — keep the open-in-browser button.
     return GestureDetector(
       onTap: () async {
-        final uri = Uri.tryParse(url);
+        final uri = Uri.tryParse(widget.url);
         if (uri != null && await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
         }
@@ -246,23 +292,17 @@ class _VideoButton extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: isYouTube
-              ? const Color(0xFFFF0000).withValues(alpha: 0.1)
-              : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isYouTube
-                ? const Color(0xFFFF0000).withValues(alpha: 0.3)
-                : Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
           children: [
             Icon(
-              isYouTube ? Icons.smart_display_rounded : Icons.play_circle_rounded,
-              color: isYouTube
-                  ? const Color(0xFFFF0000)
-                  : Theme.of(context).colorScheme.primary,
+              Icons.play_circle_rounded,
+              color: Theme.of(context).colorScheme.primary,
               size: 28,
             ),
             const SizedBox(width: 12),
@@ -271,16 +311,14 @@ class _VideoButton extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    isYouTube ? 'Watch on YouTube' : 'Watch Video',
+                    'Watch Video',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: isYouTube
-                          ? const Color(0xFFFF0000)
-                          : Theme.of(context).colorScheme.primary,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                   Text(
-                    'Opens in your browser',
+                    'Opens externally',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],

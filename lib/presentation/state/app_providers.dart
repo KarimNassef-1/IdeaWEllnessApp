@@ -8,6 +8,8 @@ import '../../data/repositories/workout_repository.dart';
 import '../../domain/entities/branch_summary.dart';
 import '../../domain/entities/class_schedule_item.dart';
 import '../../domain/entities/exercise.dart';
+import '../../domain/entities/member_package_item.dart';
+import '../../domain/entities/member_partnership.dart';
 import '../../domain/entities/subscribed_class.dart';
 import '../../domain/entities/workout_plan.dart';
 import '../../domain/repositories/content_repository.dart';
@@ -44,6 +46,27 @@ final subscribedClassesProvider = FutureProvider<List<SubscribedClass>>((
   }
 
   return ref.watch(dashboardRepositoryProvider).subscribedClasses(token);
+});
+
+final myPartnershipsProvider = FutureProvider<List<MemberPartnership>>((ref) async {
+  final token = ref.watch(authNotifierProvider).user?.token;
+  if (token == null || token.isEmpty) return const [];
+  return ref.watch(dashboardRepositoryProvider).myPartnerships(token);
+});
+
+// All active partner brands for the gym (tenant-wide), managed in the web admin.
+final partnershipsProvider = FutureProvider<List<MemberPartnership>>((ref) async {
+  final token = ref.watch(authNotifierProvider).user?.token;
+  if (token == null || token.isEmpty) return const [];
+  return ref.watch(dashboardRepositoryProvider).partnerships(token);
+});
+
+final myPackagesProvider = FutureProvider<List<MemberPackageItem>>((ref) async {
+  final token = ref.watch(authNotifierProvider).user?.token;
+  if (token == null || token.isEmpty) {
+    return const [];
+  }
+  return ref.watch(dashboardRepositoryProvider).myPackages(token);
 });
 
 /// The branch the user has selected in the classes section.

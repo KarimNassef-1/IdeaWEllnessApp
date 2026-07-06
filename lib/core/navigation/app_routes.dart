@@ -3,6 +3,7 @@ class AppRoutes {
 
   static const splash = '/splash';
   static const login = '/login';
+  static const changePassword = '/change-password';
   static const shell = '/';
   static const qrScanner = '/scanner';
   static const viewAll = '/view-all';

@@ -7,6 +7,8 @@ class BranchSummary {
     this.addressLine1,
     this.capacity,
     this.currentlyPresent = 0,
+    this.isHomeBranch = false,
+    this.crossBranchVisitsRemaining,
   });
 
   final String branchId;
@@ -16,10 +18,16 @@ class BranchSummary {
   final String? addressLine1;
   final int? capacity;
   final int currentlyPresent;
+  final bool isHomeBranch;
+  final int? crossBranchVisitsRemaining;
 
   /// 0.0–1.0, or null when no capacity is configured.
   double? get occupancyRatio =>
       (capacity != null && capacity! > 0) ? (currentlyPresent / capacity!).clamp(0.0, 1.0) : null;
+
+  /// Whole percentage 0–100, or null when no capacity is configured.
+  int? get occupancyPercent =>
+      occupancyRatio == null ? null : (occupancyRatio! * 100).round();
 
   String get displayLocation {
     final parts = [city, addressLine1]
@@ -38,6 +46,8 @@ class BranchSummary {
       addressLine1: json['addressLine1'] as String?,
       capacity: json['capacity'] as int?,
       currentlyPresent: json['currentlyPresent'] as int? ?? 0,
+      isHomeBranch: json['isHomeBranch'] as bool? ?? false,
+      crossBranchVisitsRemaining: json['crossBranchVisitsRemaining'] as int?,
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,7 +9,7 @@ import '../../../core/utils/showcase_ai_images.dart';
 import '../../../core/utils/time_greeting.dart';
 import '../../../domain/entities/branch_summary.dart';
 import '../../../domain/entities/class_schedule_item.dart';
-import '../../../domain/entities/subscribed_class.dart';
+import '../../../domain/entities/member_partnership.dart';
 import '../../state/app_providers.dart';
 import '../../widgets/animated_card.dart';
 import '../../widgets/app_image.dart';
@@ -22,21 +24,21 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final content = ref.watch(contentRepositoryProvider);
     final fresh = content.freshDrops();
-    final highlights = content.partnerHighlights();
     final offers = content.specialOffers();
     final branches = ref.watch(branchesProvider);
-    final subscribedClasses = ref.watch(subscribedClassesProvider);
     final selectedClassBranchId = ref.watch(selectedClassBranchIdProvider);
     final todayClassesAsync = ref.watch(todayClassesProvider);
-    final partners = content.partners();
+    // All active partner brands, managed dynamically in the web admin.
+    final partnershipsAsync = ref.watch(partnershipsProvider);
 
     return Scaffold(
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 120),
           children: [
+            // Greeting block
             Padding(
-              padding: const EdgeInsets.fromLTRB(0, 4, 0, 96),
+              padding: const EdgeInsets.fromLTRB(0, 4, 0, 22),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -63,6 +65,9 @@ class HomeScreen extends ConsumerWidget {
                 ],
               ),
             ),
+            // ── Branch capacity (first section) ───────────────────────
+            _capacitySection(context, branches),
+            const SizedBox(height: 20),
             _title(context, 'Fresh Drops'),
             CarouselWidget(
               items: fresh
@@ -73,12 +78,7 @@ class HomeScreen extends ConsumerWidget {
                   .toList(),
             ),
             const SizedBox(height: 20),
-            _title(context, 'From Our Partners'),
-            CarouselWidget(
-              items: highlights
-                  .map((img) => _imageCard(img, title: 'Partner campaigns'))
-                  .toList(),
-            ),
+            _partnersSection(context, partnershipsAsync),
             const SizedBox(height: 20),
             _title(context, 'Quick Shortcuts'),
             const SizedBox(height: 10),
@@ -125,34 +125,6 @@ class HomeScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 24),
-            SectionHeader(
-              title: 'Branches',
-              actionLabel: 'View All',
-              onAction: () => _openViewAll(
-                context,
-                'Branches',
-                branches.valueOrNull
-                        ?.map((branch) => branch.branchName)
-                        .toList() ??
-                    const [],
-              ),
-            ),
-            _branchesStrip(context, branches),
-            const SizedBox(height: 18),
-            SectionHeader(
-              title: 'Subscribed Classes',
-              actionLabel: 'View All',
-              onAction: () => _openViewAll(
-                context,
-                'Subscribed Classes',
-                subscribedClasses.valueOrNull
-                        ?.map((item) => item.className)
-                        .toList() ??
-                    const [],
-              ),
-            ),
-            _subscribedClassesStrip(context, subscribedClasses),
-            const SizedBox(height: 18),
             _branchClassSelector(context, ref, branches, selectedClassBranchId),
             const SizedBox(height: 18),
             SectionHeader(
@@ -224,46 +196,6 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 18),
-            _title(context, 'Our Partners'),
-            const SizedBox(height: 8),
-            GridView.builder(
-              itemCount: partners.length,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-                childAspectRatio: 0.8,
-              ),
-              itemBuilder: (context, index) {
-                final partner = partners[index];
-                return GestureDetector(
-                  onTap: () =>
-                      context.push(AppRoutes.partnerDetail, extra: partner),
-                  child: Column(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(14),
-                        child: AppImage(
-                          source: partner['image'] ?? '',
-                          width: 52,
-                          height: 52,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        partner['name'] ?? '',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
           ],
         ),
       ),
@@ -307,199 +239,110 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _branchesStrip(
+  // ── Capacity section: hero ring for home + small rings for others ──
+  Widget _capacitySection(
     BuildContext context,
     AsyncValue<List<BranchSummary>> branches,
   ) {
     return branches.when(
       loading: () => const SizedBox(
-        height: 104,
+        height: 160,
         child: Center(child: CircularProgressIndicator()),
       ),
       error: (_, _) => const SizedBox(
-        height: 104,
+        height: 80,
         child: Center(child: Text('Branches are unavailable right now.')),
       ),
       data: (items) {
         if (items.isEmpty) {
           return const SizedBox(
-            height: 104,
-            child: Center(child: Text('No active branches found.')),
+            height: 80,
+            child: Center(child: Text('No accessible branches.')),
           );
         }
 
-        return SizedBox(
-          height: 136,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: items.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 12),
-            itemBuilder: (context, index) {
-              final branch = items[index];
-              return SizedBox(
-                width: 230,
-                child: AnimatedCard(
-                  showShadow: false,
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 46,
-                        height: 46,
-                        decoration: BoxDecoration(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.location_on_rounded,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              branch.branchName,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w800,
-                                height: 1.1,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              branch.displayLocation,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                            if (branch.occupancyRatio != null) ...[
-                              const SizedBox(height: 8),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(999),
-                                child: LinearProgressIndicator(
-                                  value: branch.occupancyRatio,
-                                  minHeight: 5,
-                                  backgroundColor: Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withValues(alpha: 0.15),
-                                  valueColor: AlwaysStoppedAnimation(
-                                    _occupancyColor(branch.occupancyRatio!),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${branch.currentlyPresent} / ${branch.capacity} inside',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
-                                    ?.copyWith(
-                                      color: _occupancyColor(branch.occupancyRatio!),
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
+        final home = items.firstWhere(
+          (b) => b.isHomeBranch,
+          orElse: () => items.first,
         );
-      },
-    );
-  }
+        final others = items.where((b) => b.branchId != home.branchId).toList();
 
-  Widget _subscribedClassesStrip(
-    BuildContext context,
-    AsyncValue<List<SubscribedClass>> subscribedClasses,
-  ) {
-    return subscribedClasses.when(
-      loading: () => const SizedBox(
-        height: 132,
-        child: Center(child: CircularProgressIndicator()),
-      ),
-      error: (_, _) => const SizedBox(
-        height: 132,
-        child: Center(child: Text('Subscribed classes are unavailable.')),
-      ),
-      data: (items) {
-        if (items.isEmpty) {
-          return SizedBox(
-            height: 132,
-            child: _emptyStateCard(context, 'No active class subscriptions.'),
-          );
-        }
-
-        return SizedBox(
-          height: 136,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: items.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 12),
-            itemBuilder: (context, index) {
-              final item = items[index];
-              return SizedBox(
-                width: 260,
-                child: AnimatedCard(
-                  showShadow: false,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.className,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          height: 1.1,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        item.homeBranchName ??
-                            item.packageType ??
-                            'Active plan',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const Spacer(),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.confirmation_number_rounded,
-                            size: 16,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _title(context, 'Branch Capacity'),
+            AnimatedCard(
+              showShadow: false,
+              child: Row(
+                children: [
+                  _HeroCapacityRing(branch: home),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          home.branchName,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16,
+                            height: 1.15,
                           ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              item.sessionsLabel,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                              ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          home.displayLocation,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            'Home',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
+                ],
+              ),
+            ),
+            if (others.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 130,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: others.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 10),
+                  itemBuilder: (context, i) {
+                    final b = others[i];
+                    return _SmallCapacityCard(branch: b);
+                  },
                 ),
-              );
-            },
-          ),
+              ),
+            ],
+          ],
         );
       },
     );
@@ -696,27 +539,6 @@ class HomeScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    if (item.capacity != null) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0x66A0A0A0),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          '${item.capacity} spots',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ],
@@ -746,10 +568,88 @@ class HomeScreen extends ConsumerWidget {
     return match != null ? ' · ${match.branchName}' : '';
   }
 
-  Color _occupancyColor(double ratio) {
-    if (ratio >= 0.9) return const Color(0xFFE53935); // red
-    if (ratio >= 0.65) return const Color(0xFFFB8C00); // orange
-    return const Color(0xFF43A047); // green
+  Widget _partnersSection(
+    BuildContext context,
+    AsyncValue<List<MemberPartnership>> partnershipsAsync,
+  ) {
+    return partnershipsAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (items) {
+        if (items.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _title(context, 'Our Partners'),
+            const SizedBox(height: 8),
+            GridView.builder(
+              itemCount: items.length,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: 0.68,
+              ),
+              itemBuilder: (context, index) {
+                final p = items[index];
+                return Column(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: p.logoImageUrl != null && p.logoImageUrl!.isNotEmpty
+                          ? AppImage(
+                              source: p.logoImageUrl!,
+                              width: 52,
+                              height: 52,
+                              fit: BoxFit.cover,
+                            )
+                          : _partnerFallback(context),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      p.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    if (p.discountPercentage != null && p.discountPercentage! > 0)
+                      Text(
+                        '${p.discountPercentage!.toStringAsFixed(p.discountPercentage! % 1 == 0 ? 0 : 1)}% off',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFFFF5B14),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _partnerFallback(BuildContext context) {
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Icon(
+        Icons.handshake_rounded,
+        color: Theme.of(context).colorScheme.primary,
+        size: 26,
+      ),
+    );
   }
 
   void _openViewAll(BuildContext context, String title, List<String> items) {
@@ -770,4 +670,208 @@ class HomeScreen extends ConsumerWidget {
       },
     );
   }
+}
+
+// ── Hero capacity ring (big one, no numbers) ──────────────────────────
+class _HeroCapacityRing extends StatelessWidget {
+  const _HeroCapacityRing({required this.branch});
+  final BranchSummary branch;
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = branch.occupancyPercent;
+    final color = _capacityColor(branch.occupancyRatio ?? 0);
+
+    return SizedBox(
+      width: 96,
+      height: 96,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          CustomPaint(
+            size: const Size(96, 96),
+            painter: _CapacityRingPainter(
+              ratio: (branch.occupancyRatio ?? 0).toDouble(),
+              color: color,
+              trackColor: color.withValues(alpha: 0.15),
+              strokeWidth: 10,
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                pct == null ? '–' : '$pct%',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: color,
+                  height: 1,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'full',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: color.withValues(alpha: 0.8),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Small capacity card for other accessible branches ─────────────────
+class _SmallCapacityCard extends StatelessWidget {
+  const _SmallCapacityCard({required this.branch});
+  final BranchSummary branch;
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = branch.occupancyPercent;
+    final color = _capacityColor(branch.occupancyRatio ?? 0);
+
+    return SizedBox(
+      width: 150,
+      child: AnimatedCard(
+        showShadow: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CustomPaint(
+                        size: const Size(44, 44),
+                        painter: _CapacityRingPainter(
+                          ratio: (branch.occupancyRatio ?? 0).toDouble(),
+                          color: color,
+                          trackColor: color.withValues(alpha: 0.15),
+                          strokeWidth: 5,
+                        ),
+                      ),
+                      Text(
+                        pct == null ? '–' : '$pct%',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          color: color,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                if (branch.crossBranchVisitsRemaining != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      '${branch.crossBranchVisitsRemaining} left',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              branch.branchName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                height: 1.1,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              branch.displayLocation,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+Color _capacityColor(double ratio) {
+  if (ratio >= 0.9) return const Color(0xFFE53935);
+  if (ratio >= 0.65) return const Color(0xFFFB8C00);
+  return const Color(0xFF43A047);
+}
+
+class _CapacityRingPainter extends CustomPainter {
+  _CapacityRingPainter({
+    required this.ratio,
+    required this.color,
+    required this.trackColor,
+    required this.strokeWidth,
+  });
+
+  final double ratio;
+  final Color color;
+  final Color trackColor;
+  final double strokeWidth;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = math.min(size.width, size.height) / 2 - strokeWidth / 2;
+
+    final trackPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..color = trackColor;
+    canvas.drawCircle(center, radius, trackPaint);
+
+    if (ratio <= 0) return;
+
+    final arcPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..color = color;
+    final sweep = 2 * math.pi * ratio.clamp(0.0, 1.0);
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -math.pi / 2,
+      sweep,
+      false,
+      arcPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _CapacityRingPainter old) =>
+      old.ratio != ratio ||
+      old.color != color ||
+      old.trackColor != trackColor ||
+      old.strokeWidth != strokeWidth;
 }

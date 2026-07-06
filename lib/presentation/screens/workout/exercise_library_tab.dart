@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../../../core/navigation/app_routes.dart';
 import '../../../domain/entities/exercise.dart';
@@ -181,21 +182,7 @@ class _ExerciseTile extends StatelessWidget {
               child: SizedBox(
                 width: 80,
                 height: 80,
-                child: exercise.photoUrl != null
-                    ? AppImage(
-                        source: exercise.photoUrl!,
-                        fit: BoxFit.cover,
-                      )
-                    : Container(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.1),
-                        child: Icon(
-                          Icons.fitness_center_rounded,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
+                child: _ExerciseThumbnail(exercise: exercise),
               ),
             ),
             const SizedBox(width: 12),
@@ -270,6 +257,63 @@ class _DifficultyBadge extends StatelessWidget {
         label,
         style: TextStyle(
             fontSize: 10, color: color, fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+}
+
+class _ExerciseThumbnail extends StatelessWidget {
+  const _ExerciseThumbnail({required this.exercise});
+  final ExerciseListItem exercise;
+
+  @override
+  Widget build(BuildContext context) {
+    // Priority: photo > YouTube thumbnail > dumbbell fallback
+    if (exercise.photoUrl != null && exercise.photoUrl!.isNotEmpty) {
+      return AppImage(source: exercise.photoUrl!, fit: BoxFit.cover);
+    }
+
+    if (exercise.videoUrl != null && exercise.videoUrl!.isNotEmpty) {
+      final videoId = YoutubePlayer.convertUrlToId(exercise.videoUrl!);
+      if (videoId != null && videoId.isNotEmpty) {
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.network(
+              'https://img.youtube.com/vi/$videoId/mqdefault.jpg',
+              fit: BoxFit.cover,
+              errorBuilder: (ctx, e, s) => _fallback(context),
+            ),
+            // Play icon overlay
+            Center(
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: const Color(0xCCFF0000),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Icon(
+                  Icons.play_arrow_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ),
+          ],
+        );
+      }
+    }
+
+    return _fallback(context);
+  }
+
+  Widget _fallback(BuildContext context) {
+    return Container(
+      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+      child: Icon(
+        Icons.fitness_center_rounded,
+        color: Theme.of(context).colorScheme.primary,
       ),
     );
   }
