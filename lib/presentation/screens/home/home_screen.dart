@@ -24,12 +24,12 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final content = ref.watch(contentRepositoryProvider);
     final fresh = content.freshDrops();
-    final highlights = content.partnerHighlights();
     final offers = content.specialOffers();
     final branches = ref.watch(branchesProvider);
     final selectedClassBranchId = ref.watch(selectedClassBranchIdProvider);
     final todayClassesAsync = ref.watch(todayClassesProvider);
-    final partnershipsAsync = ref.watch(myPartnershipsProvider);
+    // All active partner brands, managed dynamically in the web admin.
+    final partnershipsAsync = ref.watch(partnershipsProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -78,12 +78,7 @@ class HomeScreen extends ConsumerWidget {
                   .toList(),
             ),
             const SizedBox(height: 20),
-            _title(context, 'From Our Partners'),
-            CarouselWidget(
-              items: highlights
-                  .map((img) => _imageCard(img, title: 'Partner campaigns'))
-                  .toList(),
-            ),
+            _partnersSection(context, partnershipsAsync),
             const SizedBox(height: 20),
             _title(context, 'Quick Shortcuts'),
             const SizedBox(height: 10),
@@ -201,7 +196,6 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 18),
-            _partnersSection(context, partnershipsAsync),
           ],
         ),
       ),
@@ -596,7 +590,7 @@ class HomeScreen extends ConsumerWidget {
                 crossAxisCount: 4,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
-                childAspectRatio: 0.8,
+                childAspectRatio: 0.68,
               ),
               itemBuilder: (context, index) {
                 final p = items[index];
@@ -605,12 +599,11 @@ class HomeScreen extends ConsumerWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(14),
                       child: p.logoImageUrl != null && p.logoImageUrl!.isNotEmpty
-                          ? Image.network(
-                              p.logoImageUrl!,
+                          ? AppImage(
+                              source: p.logoImageUrl!,
                               width: 52,
                               height: 52,
                               fit: BoxFit.cover,
-                              errorBuilder: (ctx, e, s) => _partnerFallback(context),
                             )
                           : _partnerFallback(context),
                     ),
@@ -619,8 +612,20 @@ class HomeScreen extends ConsumerWidget {
                       p.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
                       style: const TextStyle(fontSize: 12),
                     ),
+                    if (p.discountPercentage != null && p.discountPercentage! > 0)
+                      Text(
+                        '${p.discountPercentage!.toStringAsFixed(p.discountPercentage! % 1 == 0 ? 0 : 1)}% off',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFFFF5B14),
+                        ),
+                      ),
                   ],
                 );
               },

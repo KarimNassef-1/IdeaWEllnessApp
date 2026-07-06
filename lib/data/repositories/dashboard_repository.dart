@@ -72,6 +72,22 @@ class DashboardRepository {
         .toList();
   }
 
+  /// All active partner brands for the gym (tenant-wide), managed in the web
+  /// admin Partnerships page. Shown to every member.
+  Future<List<MemberPartnership>> partnerships(String token) async {
+    final response = await http.get(
+      Uri.parse('${ApiConfig.baseUrl}/api/dashboard/partnerships'),
+      headers: _headers(token),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to load partnerships.');
+    }
+    return (jsonDecode(response.body) as List<dynamic>)
+        .whereType<Map<String, dynamic>>()
+        .map(MemberPartnership.fromJson)
+        .toList();
+  }
+
   Future<TodayClasses> todayClasses(String token, {String? branchId}) async {
     final uri = Uri.parse('${ApiConfig.baseUrl}/api/dashboard/today-classes')
         .replace(queryParameters: branchId != null ? {'branchId': branchId} : null);

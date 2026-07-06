@@ -54,6 +54,13 @@ final myPartnershipsProvider = FutureProvider<List<MemberPartnership>>((ref) asy
   return ref.watch(dashboardRepositoryProvider).myPartnerships(token);
 });
 
+// All active partner brands for the gym (tenant-wide), managed in the web admin.
+final partnershipsProvider = FutureProvider<List<MemberPartnership>>((ref) async {
+  final token = ref.watch(authNotifierProvider).user?.token;
+  if (token == null || token.isEmpty) return const [];
+  return ref.watch(dashboardRepositoryProvider).partnerships(token);
+});
+
 final myPackagesProvider = FutureProvider<List<MemberPackageItem>>((ref) async {
   final token = ref.watch(authNotifierProvider).user?.token;
   if (token == null || token.isEmpty) {

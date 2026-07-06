@@ -65,21 +65,49 @@ class QrSessionConfirmationScreen extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
                   ),
                 if (result.remainingSessions != null) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 14),
+                  // Prominent "classes left" alert after a class attendance.
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFF4ED),
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: const Color(0xFFFED7AA)),
-                    ),
-                    child: Text(
-                      '${result.remainingSessions} sessions remaining',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFFFF5B14),
-                        fontSize: 12.5,
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFFF8F3), Color(0xFFFFE9D6)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFFF5B14), width: 1.5),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          '${result.remainingSessions}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFFFF5B14),
+                            fontSize: 30,
+                            height: 1,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            result.isClassAttendance
+                                ? (result.remainingSessions == 1
+                                    ? 'class left on your package'
+                                    : 'classes left on your package')
+                                : (result.remainingSessions == 1
+                                    ? 'session remaining'
+                                    : 'sessions remaining'),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF111827),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

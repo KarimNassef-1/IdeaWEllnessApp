@@ -91,6 +91,27 @@ Future<bool> login({required String email, required String password}) async {
     }
   }
 
+  /// Returns null on success, or an error message string on failure.
+  Future<String?> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final token = state.user?.token;
+    if (token == null) return 'Not authenticated.';
+
+    try {
+      final updated = await _repo.changePassword(
+        token: token,
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+      state = state.copyWith(user: updated);
+      return null;
+    } catch (e) {
+      return e.toString().replaceFirst('Exception: ', '');
+    }
+  }
+
   Future<void> logout() async {
     await _repo.signOut();
     state = state.copyWith(clearUser: true);

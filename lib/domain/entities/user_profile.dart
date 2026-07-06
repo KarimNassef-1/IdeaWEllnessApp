@@ -24,6 +24,7 @@ class UserProfile {
     this.isFrozen = false,
     this.frozenFromDate,
     this.frozenUntilDate,
+    this.mustChangePassword = false,
   });
 
   final String username;
@@ -58,6 +59,9 @@ class UserProfile {
   final String? frozenFromDate;
   final String? frozenUntilDate;
 
+  // True when a staff-reset temp password is in use and must be replaced.
+  final bool mustChangePassword;
+
   bool get canFreeze =>
       !isFrozen &&
       (freezeRemainingDays ?? 0) > 0 &&
@@ -83,6 +87,7 @@ class UserProfile {
     bool? isFrozen,
     String? frozenFromDate,
     String? frozenUntilDate,
+    bool? mustChangePassword,
   }) {
     return UserProfile(
       username: username,
@@ -109,6 +114,7 @@ class UserProfile {
       isFrozen: isFrozen ?? this.isFrozen,
       frozenFromDate: frozenFromDate ?? this.frozenFromDate,
       frozenUntilDate: frozenUntilDate ?? this.frozenUntilDate,
+      mustChangePassword: mustChangePassword ?? this.mustChangePassword,
     );
   }
 }

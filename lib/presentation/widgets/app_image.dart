@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/config/api_config.dart';
+
 class AppImage extends StatelessWidget {
   const AppImage({
     super.key,
@@ -16,18 +18,24 @@ class AppImage extends StatelessWidget {
   final BoxFit fit;
   final String fallbackAsset;
 
-  bool get _isNetwork {
-    return source.startsWith('http://') || source.startsWith('https://');
+  String get _resolvedSource {
+    if (source.startsWith('/')) return '${ApiConfig.baseUrl}$source';
+    return source;
   }
+
+  bool get _isNetwork =>
+      _resolvedSource.startsWith('http://') ||
+      _resolvedSource.startsWith('https://');
 
   @override
   Widget build(BuildContext context) {
     if (_isNetwork) {
       return Image.network(
-        source,
+        _resolvedSource,
         width: width,
         height: height,
         fit: fit,
+        headers: const {'ngrok-skip-browser-warning': 'true'},
         loadingBuilder: (context, child, progress) {
           if (progress == null) return child;
           return SizedBox(
@@ -57,7 +65,7 @@ class AppImage extends StatelessWidget {
     }
 
     return Image.asset(
-      source,
+      source.isEmpty ? fallbackAsset : source,
       width: width,
       height: height,
       fit: fit,

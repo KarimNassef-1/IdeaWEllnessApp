@@ -53,6 +53,7 @@ class AttendanceCheckInResult {
     this.branchName,
     this.checkInAtUtc,
     this.remainingSessions,
+    this.attendanceMode,
   });
 
   final bool success;
@@ -62,7 +63,13 @@ class AttendanceCheckInResult {
   final String? branchName;
   final String? checkInAtUtc;
   final int? remainingSessions;
+
+  /// 'class' | 'openGym' — distinguishes a class attendance (where remaining
+  /// sessions are "classes left") from an open-gym check-in.
+  final String? attendanceMode;
   final List<AttendancePackageOption> options;
+
+  bool get isClassAttendance => attendanceMode == 'class';
 
   factory AttendanceCheckInResult.fromJson(Map<String, dynamic> json) {
     return AttendanceCheckInResult(
@@ -73,6 +80,7 @@ class AttendanceCheckInResult {
       branchName: json['branchName'] as String?,
       checkInAtUtc: json['checkInAtUtc'] as String?,
       remainingSessions: json['remainingSessions'] as int?,
+      attendanceMode: json['attendanceMode'] as String?,
       options: (json['options'] as List<dynamic>? ?? const [])
           .whereType<Map<String, dynamic>>()
           .map(AttendancePackageOption.fromJson)

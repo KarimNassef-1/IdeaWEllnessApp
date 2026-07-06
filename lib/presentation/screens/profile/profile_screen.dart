@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/config/api_config.dart';
 import '../../../core/navigation/app_routes.dart';
 import '../../../domain/entities/member_package_item.dart';
 import '../../../domain/entities/member_partnership.dart';
 import '../../state/app_providers.dart';
 import '../../state/auth_notifier.dart';
 import '../../widgets/animated_card.dart';
+import '../../widgets/app_image.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -541,20 +541,13 @@ class _MemberAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (profileImageUrl != null && profileImageUrl!.isNotEmpty) {
-      final url = profileImageUrl!.startsWith('http')
-          ? profileImageUrl!
-          : '${ApiConfig.baseUrl}$profileImageUrl';
-      return CircleAvatar(
-        radius: radius,
-        backgroundImage: NetworkImage(url),
-        onBackgroundImageError: (e, s) {},
-        child: null,
-      );
-    }
-    return CircleAvatar(
-      radius: radius,
-      backgroundImage: const AssetImage('img/idea-profile.png'),
+    return ClipOval(
+      child: AppImage(
+        source: profileImageUrl ?? '',
+        width: radius * 2,
+        height: radius * 2,
+        fit: BoxFit.cover,
+      ),
     );
   }
 }
@@ -619,14 +612,9 @@ class _PartnershipRow extends StatelessWidget {
             ),
             clipBehavior: Clip.antiAlias,
             child: item.logoImageUrl != null && item.logoImageUrl!.isNotEmpty
-                ? Image.network(
-                    item.logoImageUrl!,
+                ? AppImage(
+                    source: item.logoImageUrl!,
                     fit: BoxFit.contain,
-                    errorBuilder: (context, error, stack) => Icon(
-                      Icons.handshake_rounded,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 22,
-                    ),
                   )
                 : Icon(
                     Icons.handshake_rounded,
@@ -719,4 +707,3 @@ class _PerkChip extends StatelessWidget {
     );
   }
 }
-

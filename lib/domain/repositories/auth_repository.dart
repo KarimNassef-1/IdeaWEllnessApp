@@ -15,5 +15,11 @@ abstract class AuthRepository {
     required int durationDays,
   });
 
+  Future<UserProfile> changePassword({
+    required String token,
+    required String currentPassword,
+    required String newPassword,
+  });
+
   Future<void> signOut();
 }

@@ -8,6 +8,7 @@ import '../../presentation/screens/workout/exercise_detail_screen.dart';
 import '../../presentation/screens/workout/exercise_picker_screen.dart';
 import '../../presentation/screens/workout/plan_detail_screen.dart';
 import '../../presentation/screens/common/view_all_screen.dart';
+import '../../presentation/screens/auth/change_password_screen.dart';
 import '../../presentation/screens/login/login_screen.dart';
 import '../../presentation/screens/partner/partner_detail_screen.dart';
 import '../../presentation/screens/qr/qr_scanner_screen.dart';
@@ -33,6 +34,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => _animatedPage(
           state: state,
           child: const LoginScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.changePassword,
+        pageBuilder: (context, state) => _animatedPage(
+          state: state,
+          child: const ChangePasswordScreen(),
         ),
       ),
       GoRoute(
@@ -138,11 +146,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final auth = ref.read(authNotifierProvider);
       final isLoginRoute = state.matchedLocation == AppRoutes.login;
       final isSplashRoute = state.matchedLocation == AppRoutes.splash;
+      final isChangePwRoute = state.matchedLocation == AppRoutes.changePassword;
 
       if (isSplashRoute) return null;
 
       if (!auth.isAuthenticated && !isLoginRoute) return AppRoutes.login;
-      if (auth.isAuthenticated && isLoginRoute) return AppRoutes.shell;
+
+      // Force the temp-password change before anything else once authenticated.
+      final mustChange = auth.user?.mustChangePassword ?? false;
+      if (auth.isAuthenticated && mustChange && !isChangePwRoute) {
+        return AppRoutes.changePassword;
+      }
+      if (auth.isAuthenticated && !mustChange && isChangePwRoute) {
+        return AppRoutes.shell;
+      }
+
+      if (auth.isAuthenticated && isLoginRoute) {
+        return mustChange ? AppRoutes.changePassword : AppRoutes.shell;
+      }
       return null;
     },
   );
