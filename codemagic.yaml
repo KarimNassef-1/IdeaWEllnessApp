@@ -20,9 +20,16 @@ workflows:
         script: |
           keychain initialize
           # CERTIFICATE_PRIVATE_KEY is stored base64-encoded (to survive the
-          # Codemagic UI). Decode it back to a proper multi-line PEM held in an
-          # env var, which --certificate-key can read via @env:.
-          export CERT_KEY_PEM="$(echo "$CERTIFICATE_PRIVATE_KEY" | base64 --decode)"
+          # Codemagic UI). Decode it back to a proper multi-line PEM.
+          printf '%s' "$CERTIFICATE_PRIVATE_KEY" | base64 --decode > /tmp/cert_key.pem
+          # Sanity check: the decoded file must be a real PEM private key.
+          if ! head -1 /tmp/cert_key.pem | grep -q "BEGIN PRIVATE KEY"; then
+            echo "ERROR: CERTIFICATE_PRIVATE_KEY did not decode to a PEM key."
+            echo "First 40 chars of the raw variable were: ${CERTIFICATE_PRIVATE_KEY:0:40}"
+            echo "It must contain the BASE64 string, not the raw -----BEGIN...----- key."
+            exit 1
+          fi
+          export CERT_KEY_PEM="$(cat /tmp/cert_key.pem)"
           # Creates a distribution certificate tied to our own private key plus
           # the App Store provisioning profile, using the connected API key.
           app-store-connect fetch-signing-files "com.ideawellness.app" \
