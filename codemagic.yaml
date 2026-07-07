@@ -20,13 +20,14 @@ workflows:
         script: |
           keychain initialize
           # CERTIFICATE_PRIVATE_KEY is stored base64-encoded (to survive the
-          # Codemagic UI). Decode it back to a PEM file for signing.
-          echo "$CERTIFICATE_PRIVATE_KEY" | base64 --decode > /tmp/cert_key.pem
+          # Codemagic UI). Decode it back to a proper multi-line PEM held in an
+          # env var, which --certificate-key can read via @env:.
+          export CERT_KEY_PEM="$(echo "$CERTIFICATE_PRIVATE_KEY" | base64 --decode)"
           # Creates a distribution certificate tied to our own private key plus
           # the App Store provisioning profile, using the connected API key.
           app-store-connect fetch-signing-files "com.ideawellness.app" \
             --type IOS_APP_STORE \
-            --certificate-key @file:/tmp/cert_key.pem \
+            --certificate-key @env:CERT_KEY_PEM \
             --create
           keychain add-certificates
           xcode-project use-profiles
