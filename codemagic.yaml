@@ -8,6 +8,10 @@ workflows:
       # The name must match the integration name set in the Codemagic UI.
       app_store_connect: ideawellness
     environment:
+      groups:
+        # In the Codemagic UI, both CERTIFICATE_PRIVATE_KEY and
+        # APP_STORE_APPLE_ID must be added to a variable group named "appstore".
+        - appstore
       flutter: stable
       xcode: latest
       cocoapods: default
