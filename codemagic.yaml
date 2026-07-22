@@ -52,9 +52,13 @@ workflows:
           echo "BUILD_NUMBER=$BUILD_NUMBER" >> $CM_ENV
       - name: Build IPA
         script: |
+          # API_BASE_URL (set as a Codemagic env var) points the app at the
+          # deployed Azure API. It overrides the local/ngrok fallbacks in
+          # lib/core/config/api_config.dart via String.fromEnvironment.
           flutter build ipa --release \
             --build-name=1.0.0 \
             --build-number=$BUILD_NUMBER \
+            --dart-define=API_BASE_URL=$API_BASE_URL \
             --export-options-plist=/Users/builder/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
