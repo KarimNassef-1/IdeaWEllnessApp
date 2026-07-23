@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../../core/config/api_config.dart';
+import '../../core/network/session_expiry.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/local/session_local_datasource.dart';
@@ -109,9 +110,11 @@ class AuthRepositoryImpl implements AuthRepository {
         mustChangePassword: data['mustChangePassword'] as bool? ?? false,
         token: token,
       );
-    } else {
-      throw Exception('Failed to load profile');
     }
+
+    // Expired/invalid token → trigger a global logout and stop.
+    throwIfUnauthorized(response.statusCode);
+    throw Exception('Failed to load profile');
   }
 
   @override

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../../core/config/api_config.dart';
+import '../../core/network/session_expiry.dart';
 import '../../domain/entities/branch_summary.dart';
 import '../../domain/entities/class_schedule_item.dart';
 import '../../domain/entities/member_package_item.dart';
@@ -16,6 +17,7 @@ class DashboardRepository {
       headers: _headers(token),
     );
 
+    throwIfUnauthorized(response.statusCode);
     if (response.statusCode != 200) {
       throw Exception('Failed to load branches.');
     }
@@ -32,6 +34,7 @@ class DashboardRepository {
       headers: _headers(token),
     );
 
+    throwIfUnauthorized(response.statusCode);
     if (response.statusCode != 200) {
       throw Exception('Failed to load subscribed classes.');
     }
@@ -48,6 +51,7 @@ class DashboardRepository {
       headers: _headers(token),
     );
 
+    throwIfUnauthorized(response.statusCode);
     if (response.statusCode != 200) {
       throw Exception('Failed to load your packages.');
     }
@@ -63,6 +67,7 @@ class DashboardRepository {
       Uri.parse('${ApiConfig.baseUrl}/api/dashboard/my-partnerships'),
       headers: _headers(token),
     );
+    throwIfUnauthorized(response.statusCode);
     if (response.statusCode != 200) {
       throw Exception('Failed to load partnerships.');
     }
@@ -79,6 +84,7 @@ class DashboardRepository {
       Uri.parse('${ApiConfig.baseUrl}/api/dashboard/partnerships'),
       headers: _headers(token),
     );
+    throwIfUnauthorized(response.statusCode);
     if (response.statusCode != 200) {
       throw Exception('Failed to load partnerships.');
     }
@@ -94,6 +100,7 @@ class DashboardRepository {
 
     final response = await http.get(uri, headers: _headers(token));
 
+    throwIfUnauthorized(response.statusCode);
     if (response.statusCode != 200) {
       throw Exception('Failed to load today\'s classes.');
     }

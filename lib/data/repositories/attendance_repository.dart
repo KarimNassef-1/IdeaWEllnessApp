@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../../core/config/api_config.dart';
+import '../../core/network/session_expiry.dart';
 
 class AttendanceRepository {
   Future<AttendanceCheckInResult> checkIn({
@@ -33,9 +34,8 @@ class AttendanceRepository {
       return result;
     }
 
-    if (response.statusCode == 401) {
-      throw Exception('Please log in again.');
-    }
+    // Expired/invalid token → global logout, then stop.
+    throwIfUnauthorized(response.statusCode);
 
     throw Exception(
       result.message.isEmpty ? 'Check-in failed.' : result.message,

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../../core/config/api_config.dart';
+import '../../core/network/session_expiry.dart';
 import '../../domain/entities/exercise.dart';
 import '../../domain/entities/workout_plan.dart';
 
@@ -78,6 +79,7 @@ class WorkoutRepository {
 
   Future<void> deletePlan(String token, String planId) async {
     final res = await http.delete(Uri.parse('$_base/plans/$planId'), headers: _h(token));
+    throwIfUnauthorized(res.statusCode);
     if (res.statusCode != 204) throw Exception('Failed to delete plan.');
   }
 
@@ -123,6 +125,7 @@ class WorkoutRepository {
         'restSeconds': restSeconds,
       }),
     );
+    throwIfUnauthorized(res.statusCode);
     if (res.statusCode != 204) throw Exception('Failed to update exercise.');
   }
 
@@ -135,6 +138,7 @@ class WorkoutRepository {
       Uri.parse('$_base/plans/$planId/exercises/$entryId'),
       headers: _h(token),
     );
+    throwIfUnauthorized(res.statusCode);
     if (res.statusCode != 204) throw Exception('Failed to remove exercise.');
   }
 
@@ -147,6 +151,7 @@ class WorkoutRepository {
       };
 
   void _check(http.Response res, String label) {
+    throwIfUnauthorized(res.statusCode);
     if (res.statusCode != 200) throw Exception('Failed to load $label.');
   }
 }

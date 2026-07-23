@@ -15,6 +15,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _rememberMe = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedCredentials();
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    final creds = await ref.read(sessionLocalDataSourceProvider).getCredentials();
+    if (creds == null || !mounted) return;
+    setState(() {
+      _emailController.text = creds['email'] ?? '';
+      _passwordController.text = creds['password'] ?? '';
+      _rememberMe = true;
+    });
+  }
 
   @override
   void dispose() {
@@ -34,12 +51,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
 
+    // Capture before login so we don't touch `ref` after a redirect disposes us.
+    final local = ref.read(sessionLocalDataSourceProvider);
+    final rememberMe = _rememberMe;
+
     final success = await ref.read(authNotifierProvider.notifier).login(
           email: email,
           password: password,
         );
 
-    if (!mounted || success) return;
+    if (success) {
+      if (rememberMe) {
+        await local.saveCredentials(email: email, password: password);
+      } else {
+        await local.clearCredentials();
+      }
+      return;
+    }
+
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Invalid email or password.')),
     );
@@ -193,7 +223,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Checkbox(
+                              value: _rememberMe,
+                              onChanged: (v) =>
+                                  setState(() => _rememberMe = v ?? false),
+                              activeColor: scheme.primary,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                            ),
+                            GestureDetector(
+                              onTap: () =>
+                                  setState(() => _rememberMe = !_rememberMe),
+                              child: const Text('Remember me'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
                         if (authState.loading)
                           const Padding(
                             padding: EdgeInsets.symmetric(vertical: 8),

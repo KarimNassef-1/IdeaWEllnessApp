@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/network/session_expiry.dart';
 import '../../data/datasources/local/session_local_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/entities/user_profile.dart';
@@ -41,9 +42,19 @@ class AuthState {
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier(this._repo) : super(AuthState.initial);
+  AuthNotifier(this._repo) : super(AuthState.initial) {
+    // A 401 from any authenticated request funnels here and logs the user out,
+    // so the router redirects to the login screen instead of showing errors.
+    SessionExpiry.onExpired = _handleSessionExpired;
+  }
 
   final AuthRepository _repo;
+
+  void _handleSessionExpired() {
+    if (!mounted || !state.isAuthenticated) return;
+    _repo.signOut();
+    state = state.copyWith(loading: false, clearUser: true);
+  }
 
   Future<void> restoreSession() async {
     state = state.copyWith(loading: true);
@@ -55,6 +66,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final fresh = await _repo.refreshProfile(user.token!);
       state = state.copyWith(loading: false, user: fresh);
+    } on UnauthorizedException {
+      // Stored token is expired/invalid — clear it and require a fresh login.
+      await _repo.signOut();
+      state = state.copyWith(loading: false, clearUser: true);
     } catch (_) {
       // No network — fall back to cached basic profile.
       state = state.copyWith(loading: false, user: user);
