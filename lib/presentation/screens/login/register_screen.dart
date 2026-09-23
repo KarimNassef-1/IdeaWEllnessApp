@@ -57,11 +57,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _snack(error);
   }
 
-  Future<void> _google() async {
-    final error = await ref.read(authNotifierProvider.notifier).googleSignIn();
-    if (!mounted || error == null) return;
-    _snack(error);
-  }
+  // Google sign-up is temporarily hidden until OAuth verification is finished.
+  // Re-enable by restoring the "Continue with Google" button and this handler.
+  // Future<void> _google() async {
+  //   final error = await ref.read(authNotifierProvider.notifier).googleSignIn();
+  //   if (!mounted || error == null) return;
+  //   _snack(error);
+  // }
 
   void _snack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
@@ -157,39 +159,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             padding: EdgeInsets.symmetric(vertical: 8),
                             child: Center(child: CircularProgressIndicator()),
                           )
-                        else ...[
+                        else
                           GradientButton(
                             label: 'Create account',
                             icon: Icons.person_add_alt_1_rounded,
                             onPressed: _register,
                           ),
-                          const SizedBox(height: 14),
-                          Row(
-                            children: [
-                              const Expanded(child: Divider()),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 10),
-                                child: Text('or',
-                                    style: TextStyle(color: Colors.grey.shade600)),
-                              ),
-                              const Expanded(child: Divider()),
-                            ],
-                          ),
-                          const SizedBox(height: 14),
-                          OutlinedButton.icon(
-                            onPressed: _google,
-                            icon: const Icon(Icons.g_mobiledata_rounded, size: 28),
-                            label: const Text('Continue with Google'),
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size.fromHeight(50),
-                              foregroundColor: Colors.black87,
-                              side: BorderSide(color: Colors.black.withValues(alpha: 0.15)),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                          ),
-                        ],
                         const SizedBox(height: 16),
                         TextButton(
                           onPressed: () => context.go(AppRoutes.login),

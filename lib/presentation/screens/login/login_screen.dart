@@ -77,11 +77,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  Future<void> _google() async {
-    final error = await ref.read(authNotifierProvider.notifier).googleSignIn();
-    if (!mounted || error == null) return; // success → router redirects home
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
-  }
+  // Google sign-in is temporarily hidden until OAuth verification is finished.
+  // The backend endpoint, repository, and notifier method all remain — to
+  // re-enable, restore the "Continue with Google" button and this handler.
+  // Future<void> _google() async {
+  //   final error = await ref.read(authNotifierProvider.notifier).googleSignIn();
+  //   if (!mounted || error == null) return; // success → router redirects home
+  //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -261,33 +264,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             label: 'Login',
                             icon: Icons.login_rounded,
                             onPressed: _login,
-                          ),
-                          const SizedBox(height: 14),
-                          Row(
-                            children: [
-                              const Expanded(child: Divider()),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 10),
-                                child: Text('or',
-                                    style: TextStyle(color: Colors.grey.shade600)),
-                              ),
-                              const Expanded(child: Divider()),
-                            ],
-                          ),
-                          const SizedBox(height: 14),
-                          OutlinedButton.icon(
-                            onPressed: _google,
-                            icon: const Icon(Icons.g_mobiledata_rounded, size: 28),
-                            label: const Text('Continue with Google'),
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size.fromHeight(50),
-                              foregroundColor: Colors.black87,
-                              side: BorderSide(
-                                  color: Colors.black.withValues(alpha: 0.15)),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
                           ),
                           const SizedBox(height: 8),
                           TextButton(
