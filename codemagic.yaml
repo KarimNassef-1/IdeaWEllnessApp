@@ -56,7 +56,7 @@ workflows:
           # deployed Azure API. It overrides the local/ngrok fallbacks in
           # lib/core/config/api_config.dart via String.fromEnvironment.
           flutter build ipa --release \
-            --build-name=1.0.0 \
+            --build-name=1.0.1 \
             --build-number=$BUILD_NUMBER \
             --dart-define=API_BASE_URL=$API_BASE_URL \
             --export-options-plist=/Users/builder/export_options.plist
