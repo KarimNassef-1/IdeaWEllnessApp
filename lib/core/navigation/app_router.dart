@@ -10,6 +10,7 @@ import '../../presentation/screens/workout/plan_detail_screen.dart';
 import '../../presentation/screens/common/view_all_screen.dart';
 import '../../presentation/screens/auth/change_password_screen.dart';
 import '../../presentation/screens/login/login_screen.dart';
+import '../../presentation/screens/login/register_screen.dart';
 import '../../presentation/screens/partner/partner_detail_screen.dart';
 import '../../presentation/screens/qr/qr_scanner_screen.dart';
 import '../../presentation/screens/settings/settings_screen.dart';
@@ -34,6 +35,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => _animatedPage(
           state: state,
           child: const LoginScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.register,
+        pageBuilder: (context, state) => _animatedPage(
+          state: state,
+          child: const RegisterScreen(),
         ),
       ),
       GoRoute(
@@ -145,12 +153,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final auth = ref.read(authNotifierProvider);
       final isLoginRoute = state.matchedLocation == AppRoutes.login;
+      final isRegisterRoute = state.matchedLocation == AppRoutes.register;
       final isSplashRoute = state.matchedLocation == AppRoutes.splash;
       final isChangePwRoute = state.matchedLocation == AppRoutes.changePassword;
 
       if (isSplashRoute) return null;
 
-      if (!auth.isAuthenticated && !isLoginRoute) return AppRoutes.login;
+      // Signed-out users may reach login and register; everything else → login.
+      if (!auth.isAuthenticated && !isLoginRoute && !isRegisterRoute) {
+        return AppRoutes.login;
+      }
 
       // Force the temp-password change before anything else once authenticated.
       final mustChange = auth.user?.mustChangePassword ?? false;
@@ -161,7 +173,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return AppRoutes.shell;
       }
 
-      if (auth.isAuthenticated && isLoginRoute) {
+      if (auth.isAuthenticated && (isLoginRoute || isRegisterRoute)) {
         return mustChange ? AppRoutes.changePassword : AppRoutes.shell;
       }
       return null;

@@ -89,6 +89,44 @@ Future<bool> login({required String email, required String password}) async {
   }
 }
 
+  /// Self-registration. Returns null on success, or an error message on failure.
+  Future<String?> register({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String password,
+    String? phoneNumber,
+  }) async {
+    state = state.copyWith(loading: true);
+    try {
+      final user = await _repo.register(
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        password: password,
+        phoneNumber: phoneNumber,
+      );
+      state = state.copyWith(loading: false, user: user);
+      return null;
+    } catch (e) {
+      state = state.copyWith(loading: false);
+      return e.toString().replaceFirst('Exception: ', '');
+    }
+  }
+
+  /// Google sign-in / sign-up. Returns null on success, or an error message.
+  Future<String?> googleSignIn() async {
+    state = state.copyWith(loading: true);
+    try {
+      final user = await _repo.googleSignIn();
+      state = state.copyWith(loading: false, user: user);
+      return null;
+    } catch (e) {
+      state = state.copyWith(loading: false);
+      return e.toString().replaceFirst('Exception: ', '');
+    }
+  }
+
   /// Returns null on success, or an error message string on failure.
   Future<String?> freezePackage(int durationDays) async {
     final token = state.user?.token;

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../core/config/api_config.dart';
 import '../../core/network/session_expiry.dart';
@@ -64,6 +65,91 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Exception('Invalid email or password.');
     } else {
       throw Exception('Login failed. Please try again.');
+    }
+  }
+
+  @override
+  Future<UserProfile> register({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String password,
+    String? phoneNumber,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/api/auth/register'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'firstName': firstName,
+        'lastName': lastName,
+        'email': email,
+        'password': password,
+        'phoneNumber': phoneNumber,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return _persistFromToken(data['token'] as String);
+    }
+    throw Exception(_errorMessage(response, 'Registration failed. Please try again.'));
+  }
+
+  @override
+  Future<UserProfile> googleSignIn() async {
+    final google = GoogleSignIn(
+      scopes: const ['email', 'profile'],
+      serverClientId: ApiConfig.googleServerClientId.isEmpty
+          ? null
+          : ApiConfig.googleServerClientId,
+    );
+
+    final account = await google.signIn();
+    if (account == null) {
+      throw Exception('Google sign-in was cancelled.');
+    }
+
+    final auth = await account.authentication;
+    final idToken = auth.idToken;
+    if (idToken == null || idToken.isEmpty) {
+      throw Exception('Could not get Google credentials. Please try again.');
+    }
+
+    final response = await http.post(
+      Uri.parse('$_baseUrl/api/auth/google'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'idToken': idToken}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return _persistFromToken(data['token'] as String);
+    }
+    throw Exception(_errorMessage(response, 'Google sign-in failed. Please try again.'));
+  }
+
+  /// Fetches the full profile with [token] and saves the session locally.
+  Future<UserProfile> _persistFromToken(String token) async {
+    final user = await getProfile(token);
+    await _local.saveSession(
+      username: user.username,
+      gymId: user.gymId,
+      coins: user.coins,
+      token: user.token!,
+      memberId: user.memberId!,
+      email: user.email!,
+    );
+    return user;
+  }
+
+  String _errorMessage(http.Response response, String fallback) {
+    try {
+      final body = response.body.isEmpty
+          ? const <String, dynamic>{}
+          : jsonDecode(response.body) as Map<String, dynamic>;
+      return (body['message'] as String?) ?? fallback;
+    } catch (_) {
+      return fallback;
     }
   }
 

@@ -8,6 +8,18 @@ abstract class AuthRepository {
     required String password,
   });
 
+  /// Self-registration: creates a new member account and signs them in.
+  Future<UserProfile> register({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String password,
+    String? phoneNumber,
+  });
+
+  /// Sign in or auto-register using a Google account.
+  Future<UserProfile> googleSignIn();
+
   Future<UserProfile> refreshProfile(String token);
 
   Future<UserProfile> freezePackage({

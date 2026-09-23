@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/navigation/app_routes.dart';
 import '../../widgets/gradient_button.dart';
 import '../../state/auth_notifier.dart';
 
@@ -73,6 +75,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Invalid email or password.')),
     );
+  }
+
+  Future<void> _google() async {
+    final error = await ref.read(authNotifierProvider.notifier).googleSignIn();
+    if (!mounted || error == null) return; // success → router redirects home
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
   }
 
   @override
@@ -248,12 +256,45 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             padding: EdgeInsets.symmetric(vertical: 8),
                             child: CircularProgressIndicator(),
                           )
-                        else
+                        else ...[
                           GradientButton(
                             label: 'Login',
                             icon: Icons.login_rounded,
                             onPressed: _login,
                           ),
+                          const SizedBox(height: 14),
+                          Row(
+                            children: [
+                              const Expanded(child: Divider()),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 10),
+                                child: Text('or',
+                                    style: TextStyle(color: Colors.grey.shade600)),
+                              ),
+                              const Expanded(child: Divider()),
+                            ],
+                          ),
+                          const SizedBox(height: 14),
+                          OutlinedButton.icon(
+                            onPressed: _google,
+                            icon: const Icon(Icons.g_mobiledata_rounded, size: 28),
+                            label: const Text('Continue with Google'),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(50),
+                              foregroundColor: Colors.black87,
+                              side: BorderSide(
+                                  color: Colors.black.withValues(alpha: 0.15)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextButton(
+                            onPressed: () => context.go(AppRoutes.register),
+                            child: const Text("Don't have an account? Create one"),
+                          ),
+                        ],
                       ],
                     ),
                   ),

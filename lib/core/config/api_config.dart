@@ -7,6 +7,13 @@ class ApiConfig {
     'API_BASE_URL',
   );
 
+  /// Google Sign-In: optional web/server OAuth client ID, used as the ID-token
+  /// audience the backend verifies. The iOS client ID itself is configured in
+  /// ios/Runner/Info.plist (GIDClientID + URL scheme). Pass at build time with
+  /// --dart-define=GOOGLE_SERVER_CLIENT_ID=... or leave empty.
+  static const String googleServerClientId =
+      String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
+
   // Local IP (same Wi-Fi as dev machine)
   static const String _localUrl = 'http://192.168.1.7:5159';
 
