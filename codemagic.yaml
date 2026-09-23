@@ -67,8 +67,12 @@ workflows:
     publishing:
       app_store_connect:
         auth: integration
-        submit_to_testflight: true
-        # Uncomment and set your tester group names to auto-notify external testers:
+        # Uploads the build to TestFlight for INTERNAL testing (available to
+        # internal testers automatically). External (public) beta testing is
+        # left off — it requires the Beta test-info form and Apple review.
+        # To enable external testers later: set submit_to_testflight: true,
+        # fill Test Information in App Store Connect, and add beta_groups below.
+        submit_to_testflight: false
         # beta_groups:
         #   - Beta Testers
       email:
