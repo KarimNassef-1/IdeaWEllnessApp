@@ -101,10 +101,14 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
   }
 
   Widget _classShowcaseCard(GymSession session) {
-    final imageUrl = showcaseAiImage(
-      'high action gym class ${session.name} coached by ${session.trainer} premium cinematic',
-      seed: session.id.hashCode.abs() % 100000,
-    );
+    // Use the real class photo when set; fall back to a generated image only
+    // when the class has no photo.
+    final imageUrl = (session.photoUrl != null && session.photoUrl!.isNotEmpty)
+        ? session.photoUrl!
+        : showcaseAiImage(
+            'high action gym class ${session.name} coached by ${session.trainer} premium cinematic',
+            seed: session.id.hashCode.abs() % 100000,
+          );
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
@@ -129,9 +133,9 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'HELIOPOLIS',
-                    style: TextStyle(
+                  Text(
+                    (session.branchName ?? 'IDEA WELLNESS').toUpperCase(),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10,
                       fontWeight: FontWeight.w700,

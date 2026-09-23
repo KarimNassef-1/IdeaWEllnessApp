@@ -33,6 +33,8 @@ class ClassScheduleItem {
     'type': '',
     'day': day ?? _todayName(),
     'category': '',
+    'photoUrl': photoUrl ?? '',
+    'branch': branchName,
   };
 
   String _todayName() {

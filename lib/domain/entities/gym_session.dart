@@ -8,6 +8,8 @@ class GymSession {
     required this.type,
     this.day,
     this.category,
+    this.photoUrl,
+    this.branchName,
   });
 
   final String id;
@@ -18,6 +20,8 @@ class GymSession {
   final String type;
   final String? day;
   final String? category;
+  final String? photoUrl;
+  final String? branchName;
 
   String get time => timeStart;
 
@@ -31,12 +35,18 @@ class GymSession {
       'type': type,
       'day': day ?? '',
       'category': category ?? '',
+      'photoUrl': photoUrl ?? '',
+      'branch': branchName ?? '',
     };
   }
 
   factory GymSession.fromMap(Map<String, dynamic> map) {
     final start = (map['time_start'] ?? map['time'] ?? '').toString();
     final end = (map['time_end'] ?? '').toString();
+    String? nullIfEmpty(Object? v) {
+      final s = (v ?? '').toString();
+      return s.isEmpty ? null : s;
+    }
 
     return GymSession(
       id: (map['id'] ?? '').toString(),
@@ -45,10 +55,10 @@ class GymSession {
       timeEnd: end.isEmpty ? start : end,
       trainer: (map['trainer'] ?? '').toString(),
       type: (map['type'] ?? '').toString(),
-      day: (map['day'] ?? '').toString().isEmpty ? null : (map['day'] ?? '').toString(),
-      category: (map['category'] ?? '').toString().isEmpty
-          ? null
-          : (map['category'] ?? '').toString(),
+      day: nullIfEmpty(map['day']),
+      category: nullIfEmpty(map['category']),
+      photoUrl: nullIfEmpty(map['photoUrl']),
+      branchName: nullIfEmpty(map['branch']),
     );
   }
 }
