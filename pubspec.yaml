@@ -78,7 +78,8 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "img/idea-app-icon.png"
+  image_path: "img/app_icon.png"
+  remove_alpha_ios: true
   min_sdk_android: 21
 
 flutter_native_splash:
