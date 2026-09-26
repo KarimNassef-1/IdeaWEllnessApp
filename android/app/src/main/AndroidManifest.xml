@@ -2,7 +2,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
 
     <application
-        android:label="Idea Wellness"
+        android:label="IDEA Wellness"
         android:name="${applicationName}"
         android:enableOnBackInvokedCallback="true"
         android:usesCleartextTraffic="true"
