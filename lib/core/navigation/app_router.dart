@@ -8,6 +8,7 @@ import '../../presentation/screens/workout/exercise_detail_screen.dart';
 import '../../presentation/screens/workout/exercise_picker_screen.dart';
 import '../../presentation/screens/workout/plan_detail_screen.dart';
 import '../../presentation/screens/common/view_all_screen.dart';
+import '../../presentation/screens/gyms/gyms_screen.dart';
 import '../../presentation/screens/auth/change_password_screen.dart';
 import '../../presentation/screens/login/login_screen.dart';
 import '../../presentation/screens/login/register_screen.dart';
@@ -86,6 +87,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ),
           );
         },
+      ),
+      GoRoute(
+        path: AppRoutes.gyms,
+        pageBuilder: (context, state) => _animatedPage(
+          state: state,
+          child: const GymsScreen(),
+        ),
       ),
       GoRoute(
         path: AppRoutes.article,

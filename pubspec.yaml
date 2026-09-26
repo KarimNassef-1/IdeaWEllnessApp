@@ -69,6 +69,7 @@ flutter:
   assets:
     - img/
     - img/schedule/
+    - img/branches/
 
   fonts:
     - family: Sportive

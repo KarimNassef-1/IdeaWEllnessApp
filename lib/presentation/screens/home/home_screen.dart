@@ -82,24 +82,9 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
                 CircularShortcutButton(
-                  label: 'Arenas',
-                  icon: Icons.stadium_rounded,
-                  onTap: () => _openViewAll(context, 'Arenas', const [
-                    'Main Arena',
-                    'Functional Arena',
-                  ]),
-                ),
-                CircularShortcutButton(
                   label: 'Gyms',
                   icon: Icons.fitness_center_rounded,
-                  onTap: () => _openViewAll(
-                    context,
-                    'Gyms',
-                    branches.valueOrNull
-                            ?.map((branch) => branch.branchName)
-                            .toList() ??
-                        const [],
-                  ),
+                  onTap: () => context.push(AppRoutes.gyms),
                 ),
                 CircularShortcutButton(
                   label: 'Badges',

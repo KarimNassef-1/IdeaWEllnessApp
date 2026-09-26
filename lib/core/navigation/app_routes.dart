@@ -8,6 +8,7 @@ class AppRoutes {
   static const shell = '/';
   static const qrScanner = '/scanner';
   static const viewAll = '/view-all';
+  static const gyms = '/gyms';
   static const article = '/article';
   static const partnerDetail = '/partner';
   static const settings = '/settings';
