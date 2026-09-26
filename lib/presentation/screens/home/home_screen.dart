@@ -22,9 +22,6 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final content = ref.watch(contentRepositoryProvider);
-    final fresh = content.freshDrops();
-    final offers = content.specialOffers();
     final branches = ref.watch(branchesProvider);
     final selectedClassBranchId = ref.watch(selectedClassBranchIdProvider);
     final todayClassesAsync = ref.watch(todayClassesProvider);
@@ -67,16 +64,6 @@ class HomeScreen extends ConsumerWidget {
             ),
             // ── Branch capacity (first section) ───────────────────────
             _capacitySection(context, branches),
-            const SizedBox(height: 20),
-            _title(context, 'Fresh Drops'),
-            CarouselWidget(
-              items: fresh
-                  .map(
-                    (img) =>
-                        _imageCard(img, title: 'Gym update and announcements'),
-                  )
-                  .toList(),
-            ),
             const SizedBox(height: 20),
             _partnersSection(context, partnershipsAsync),
             const SizedBox(height: 20),
@@ -149,53 +136,6 @@ class HomeScreen extends ConsumerWidget {
             ),
             _todayClassesStrip(context, todayClassesAsync, useMyClasses: false),
             const SizedBox(height: 18),
-            SectionHeader(
-              title: 'Special Offers',
-              actionLabel: 'View All',
-              onAction: () => _openViewAll(
-                context,
-                'Special Offers',
-                offers.map((e) => e['title'] ?? '').toList(),
-              ),
-            ),
-            SizedBox(
-              height: 176,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: 2,
-                separatorBuilder: (context, index) => const SizedBox(width: 12),
-                itemBuilder: (context, index) {
-                  final offer = offers[index];
-                  return SizedBox(
-                    width: 260,
-                    child: AnimatedCard(
-                      showShadow: false,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            offer['title'] ?? '',
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(offer['subtitle'] ?? ''),
-                          const Spacer(),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: AppImage(
-                              source: offer['image'] ?? '',
-                              height: 70,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 18),
           ],
         ),
       ),
@@ -210,31 +150,6 @@ class HomeScreen extends ConsumerWidget {
         style: Theme.of(
           context,
         ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-      ),
-    );
-  }
-
-  Widget _imageCard(String image, {required String title}) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          AppImage(source: image, fit: BoxFit.cover),
-          Positioned(
-            left: 14,
-            right: 14,
-            bottom: 14,
-            child: Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                shadows: [Shadow(color: Colors.black54, blurRadius: 8)],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
