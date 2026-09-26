@@ -44,4 +44,15 @@ const List<Gym> gymsCatalog = <Gym>[
       'img/branches/gouna_4.jpg',
     ],
   ),
+  Gym(
+    name: 'Sahel',
+    location: 'North Coast',
+    photos: [
+      'img/branches/sahel_1.jpg',
+      'img/branches/sahel_2.jpg',
+      'img/branches/sahel_3.jpg',
+      'img/branches/sahel_4.jpg',
+      'img/branches/sahel_5.jpg',
+    ],
+  ),
 ];
