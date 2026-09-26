@@ -23,7 +23,7 @@ class RewardsScreen extends ConsumerWidget {
     final tx = rewardsRepo.transactions();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Idea Wellness Rewards')),
+      appBar: AppBar(title: const Text('IDEA Wellness Rewards')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 120),
         children: [

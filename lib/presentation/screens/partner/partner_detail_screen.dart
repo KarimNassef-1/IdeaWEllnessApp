@@ -36,7 +36,7 @@ class PartnerDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              '$name x Idea Wellness',
+              '$name x IDEA Wellness',
               style: Theme.of(context)
                   .textTheme
                   .titleLarge

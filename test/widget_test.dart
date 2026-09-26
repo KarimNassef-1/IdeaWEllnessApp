@@ -8,6 +8,6 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: IdeaWellnessApp()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Idea Wellness'), findsOneWidget);
+    expect(find.text('IDEA Wellness'), findsOneWidget);
   });
 }
