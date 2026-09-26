@@ -58,19 +58,29 @@ class _GymCardState extends State<_GymCard> {
               ?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 2),
-        Row(
-          children: [
-            Icon(Icons.location_on_rounded, size: 15, color: scheme.primary),
-            const SizedBox(width: 4),
-            Text(
-              gym.location,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFF5D5D5D),
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ],
-        ),
+        if (gym.comingSoon)
+          Text(
+            'Coming soon',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: scheme.primary,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.3,
+                ),
+          )
+        else if (gym.location.isNotEmpty)
+          Row(
+            children: [
+              Icon(Icons.location_on_rounded, size: 15, color: scheme.primary),
+              const SizedBox(width: 4),
+              Text(
+                gym.location,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: const Color(0xFF5D5D5D),
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ],
+          ),
         const SizedBox(height: 12),
         ClipRRect(
           borderRadius: BorderRadius.circular(20),
@@ -87,6 +97,30 @@ class _GymCardState extends State<_GymCard> {
                     fit: BoxFit.cover,
                   ),
                 ),
+                if (gym.comingSoon)
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: scheme.primary,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: const Text(
+                        'COMING SOON',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                    ),
+                  ),
                 if (gym.photos.length > 1)
                   Positioned(
                     bottom: 10,

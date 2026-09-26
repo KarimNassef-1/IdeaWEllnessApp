@@ -9,15 +9,22 @@ class Gym {
     required this.location,
     required this.photos,
     this.description,
+    this.comingSoon = false,
   });
 
   final String name;
+
+  /// Area/city. Leave empty ('') to hide the location line (e.g. for a
+  /// branch that hasn't opened yet).
   final String location;
 
   /// Asset paths, e.g. `img/branches/westin_1.jpg`.
   final List<String> photos;
 
   final String? description;
+
+  /// Shows a "COMING SOON" badge and hides the location pin.
+  final bool comingSoon;
 }
 
 /// Curated list of gym branches, in display order.
@@ -53,6 +60,14 @@ const List<Gym> gymsCatalog = <Gym>[
       'img/branches/sahel_3.jpg',
       'img/branches/sahel_4.jpg',
       'img/branches/sahel_5.jpg',
+    ],
+  ),
+  Gym(
+    name: 'Taj Sultan',
+    location: '',
+    comingSoon: true,
+    photos: [
+      'img/branches/taj_sultan_1.jpg',
     ],
   ),
 ];
