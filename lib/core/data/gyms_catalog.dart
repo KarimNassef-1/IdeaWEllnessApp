@@ -23,13 +23,13 @@ class Gym {
 /// Curated list of gym branches, in display order.
 const List<Gym> gymsCatalog = <Gym>[
   Gym(
-    name: 'Westin',
-    location: 'New Cairo',
+    name: 'Gouna',
+    location: 'El Gouna, Red Sea',
     photos: [
-      'img/branches/westin_1.jpg',
-      'img/branches/westin_2.jpg',
-      'img/branches/westin_3.jpg',
-      'img/branches/westin_4.jpg',
+      'img/branches/gouna_1.jpg',
+      'img/branches/gouna_2.jpg',
+      'img/branches/gouna_3.jpg',
+      'img/branches/gouna_4.jpg',
     ],
   ),
 ];
