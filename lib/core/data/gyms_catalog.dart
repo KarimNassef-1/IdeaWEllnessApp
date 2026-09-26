@@ -30,6 +30,17 @@ class Gym {
 /// Curated list of gym branches, in display order.
 const List<Gym> gymsCatalog = <Gym>[
   Gym(
+    name: 'Sheraton',
+    location: 'Heliopolis, Cairo',
+    photos: [
+      'img/branches/sheraton_1.jpg',
+      'img/branches/sheraton_2.jpg',
+      'img/branches/sheraton_3.jpg',
+      'img/branches/sheraton_4.jpg',
+      'img/branches/sheraton_5.jpg',
+    ],
+  ),
+  Gym(
     name: 'Westin',
     location: 'New Cairo',
     photos: [
